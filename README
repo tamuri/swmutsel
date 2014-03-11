@@ -1,3 +1,6 @@
+DOWNLOAD
+       https://github.com/tamuri/swmutsel/releases/download/v1.0/swmutsel.jar
+
 SYNOPSIS
        java -jar swmutsel.jar
            -name <run_name>
