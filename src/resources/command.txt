@@ -1,0 +1,19 @@
+SYNOPSIS
+       java -jar swmutsel.jar
+           -name <run_name>
+           -sequences <sequence_file_name>
+           -tree <tree_file_name | tree_newick_string>
+           -geneticcode <standard | vertebrate_mit | plastid>
+           [-penalty mvn,<sigma> | dirichlet,<alpha>]
+           [-kappa <kappa>]
+           [-pi T,C,A,G]
+           [-scaling branch_scaling_factor]
+           [-fitness A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V]
+           [-fix mutation|branches|all]
+           [-threads <cpu_cores>]
+           [-distributed -host <host>:<port> [-host <host>:<port>], ...]
+           [-sites <site>|<site_range>]
+           [-restart-opt <no_of_restarts> [-restart-int <n_iterations>]]
+           [-clademodel clade_label,clade_label[,clade_label[,...]]]
+           [-hessian]
+           [-help]
