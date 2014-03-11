@@ -15,8 +15,8 @@ SYNOPSIS
            [-sites <site>|<site_range>]
            [-restart-opt <no_of_restarts> [-restart-int <n_iterations>]]
            [-clademodel clade_label,clade_label[,clade_label[,...]]]
-           [-hessian]
            [-help]
+
 OPTIONS
    Required
        -n, -name
@@ -112,13 +112,6 @@ OPTIONS
               A range is specified using a dash e.g. "-sites 10-20" will estimate
               the site-wise fitnesses for all sites between site 10 and site 20,
               inclusive.
-
-       -hessian
-              If supplied, the program will calculate the gradient and Hessian
-              for the branch lengths and print the results in the input format
-              required by MCMCTree. You can use this in conjunction with
-              "-fix all" and the program will skip optimisation, calculate the
-              likelihood, gradient and Hessian, and then exit.
        
    Parallelisation
        -T, -threads
@@ -161,11 +154,4 @@ USAGE
        You can restart the program from a saved checkpoint, for example:
 
           java -jar swmutsel.jar @test_CHKPNT_9.txt -n test_restart
-
-       Q: The program terminated and I have test_MLE.txt but I forgot "-hessian"
-
-       A: You can run the program with "-fix all" and the maximum likelihood
-       estimates to just calculate the log-likelihood and output the Hessian:
-
-          java -jar swmutsel.jar @test_MLE.txt -fix all -hessian -n test_hessian
 

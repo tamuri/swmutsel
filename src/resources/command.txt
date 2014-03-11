@@ -15,5 +15,4 @@ SYNOPSIS
            [-sites <site>|<site_range>]
            [-restart-opt <no_of_restarts> [-restart-int <n_iterations>]]
            [-clademodel clade_label,clade_label[,clade_label[,...]]]
-           [-hessian]
            [-help]
