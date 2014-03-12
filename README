@@ -31,12 +31,10 @@ OPTIONS
        -n, -name
               Specifies name for the run. Output files are prefixed with this name.
               Be careful! The program will overwrite files with the same name.
-              // todo: Exit if files with same name exit
        
        -s, -sequences
               Coding sequences alignment file name in PHYLIP format. Spaces are
               not allowed in sequence names.
-              // todo: Other MSA formats esp. FASTA
        
        -t, -tree
               Newick-formatted tree file name. The tree string can be supplied
