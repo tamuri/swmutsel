@@ -45,7 +45,7 @@
 
     <target name="jar" depends="compile">
         <tstamp>
-            <format property="timenow" pattern="YYMMddHHmm" />
+            <format property="timenow" pattern="yyMMddHHmm" />
         </tstamp>
         <jar manifest="src/resources/META-INF/MANIFEST.MF" destfile="${dist.dir}\${ant.project.name}-${timenow}.jar" basedir="${build.dir}">
             <zipgroupfileset dir="lib" includes="*.jar" />
