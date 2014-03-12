@@ -1,3 +1,9 @@
+This is swMutSel, a program to estimate fitnesses of amino acids in protein-
+coding genes using the evolution model of Halpern and Bruno (1998) and Tamuri et
+al. (2012, 2014). The program takes as input an alignment of protein-coding
+gene sequences and a phylogeny (tree) of the sequences, and outputs the
+fitnesses of each amino acid at each location in the protein-coding gene.
+
 DOWNLOAD
        https://github.com/tamuri/swmutsel/releases/download/v1.0/swmutsel.jar
 
@@ -25,10 +31,12 @@ OPTIONS
        -n, -name
               Specifies name for the run. Output files are prefixed with this name.
               Be careful! The program will overwrite files with the same name.
+              // todo: Exit if files with same name exit
        
        -s, -sequences
               Coding sequences alignment file name in PHYLIP format. Spaces are
               not allowed in sequence names.
+              // todo: Other MSA formats esp. FASTA
        
        -t, -tree
               Newick-formatted tree file name. The tree string can be supplied
@@ -48,21 +56,24 @@ OPTIONS
               supplied, the usual (unpenalised) maximum likelihood method is used.
               Valid options are:
        
-              -p mvn,<s>       : Multivariate normal penalty with variance <s>^2
-
+              -p mvn,<s>       : Multivariate normal penalty with variance 2*<s>^2
               -p dirichlet,<a> : Dirichlet-based penalty with shape <a>
        
        -k, -kappa
-              The transition-transversion rate ratio for mutation.
+              The starting parameter value for the transition-transversion rate
+              ratio. If you "-fix mutation" the parameter will not be estimated.
               DEFAULT: 1.0
        
        -pi
-              Comma-separated base frequencies in order T,C,A,G. The values are
-              normalised to sum to 1.
+              The starting parameter value for nucleotide base frequencies. Must
+              be comma-separated with order T,C,A,G. The values are normalised to
+              sum to 1. If you "-fix mutation" the parameter will not be estimated.
               DEFAULT: [0.25]
        
        -c, -scaling
-              Branch scaling factor (applied to all branches).
+              The starting parameter value for branch scaling factor (applied to
+              all branches). If you "-fix mutation" the parameter will not be
+              estimated.
               DEFAULT: 1.0
        
        -f, -fitness
@@ -123,8 +134,8 @@ OPTIONS
               using "-H")
        
        -H, -host
-              If the programming is running in distributed mode (using the "-D"
-              option), supply slaves' host IP and port using "-H <slave_ip>:<port>"
+              If the program is running in distributed mode (using the "-D" option),
+              supply slaves' host IP and port using "-H <slave_ip>:<port>"
 
 USAGE
 
@@ -153,4 +164,18 @@ USAGE
        You can restart the program from a saved checkpoint, for example:
 
           java -jar swmutsel.jar @test_CHKPNT_9.txt -n test_restart
+
+CITATION
+
+       Halpern AL and Bruno WJ. (1998) Evolutionary distances for protein-coding
+       sequences: modeling site-specific residue frequencies. Molecular Biology
+       and Evolution, 15: 910-917.
+
+       Tamuri AU, dos Reis M and Goldstein R. (2012) Estimating the distribution
+       of selection coefficients from phylogenetic data using sitewise mutation-
+       selection models. Genetics, 190: 1101-1115.
+
+       Tamuri AU, Goldman N and dos Reis M. (2014) A penalized likelihood method
+       for estimating the distribution of selection coefficients from
+       phylogenetic data. Genetics.
 

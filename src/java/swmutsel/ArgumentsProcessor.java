@@ -125,16 +125,19 @@ public class ArgumentsProcessor {
     }
     
     private void showHelpAndExit() {
-        InputStream is = this.getClass().getResourceAsStream("/resources/command.txt");
+        InputStream is = this.getClass().getResourceAsStream("/resources/description.txt");
         String s = CoreUtils.convertStreamToString(is);
-
         System.out.println();
+        System.out.println(s);
+        System.out.println();
+
+        is = this.getClass().getResourceAsStream("/resources/command.txt");
+        s = CoreUtils.convertStreamToString(is);
         System.out.println(s);
         System.out.println();
 
         is = this.getClass().getResourceAsStream("/resources/help.txt");
         s = CoreUtils.convertStreamToString(is);
-
         System.out.println(s);
         System.out.println();
     }

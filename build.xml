@@ -24,6 +24,7 @@
         <copy todir="${build.dir}">
            <fileset dir="src" includes="resources/help.txt" />
            <fileset dir="src" includes="resources/command.txt" />
+           <fileset dir="src" includes="resources/description.txt" />
         </copy>
     </target>
 

@@ -114,11 +114,11 @@ public class Arguments {
     public String summary() {
 
         return String.format(
-                "-kappa %s -scaling %s -pi %s -fix %s%s%s%s",
+                "-kappa %s -scaling %s -pi %s%s%s%s%s",
                 kappa,
                 scaling,
                 Doubles.join(",", pi),
-                Joiner.on(',').join(fix),
+                (fix.size() > 0) ? " -fix " + Joiner.on(',').join(fix) : "",
                 distributed ? " -distributed" : "",
                 (threads > 1) ? " -threads " + threads : "",
                 (hosts.size() > 0) ? " -hosts " + Joiner.on(" -hosts ").join(hosts) : ""
