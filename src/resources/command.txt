@@ -8,7 +8,7 @@ SYNOPSIS
            [-kappa <kappa>]
            [-pi T,C,A,G]
            [-scaling branch_scaling_factor]
-           [-fitness A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V]
+           [-fitness <site>,A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V]
            [-fix mutation|branches|all]
            [-threads <cpu_cores>]
            [-distributed -host <host>:<port> [-host <host>:<port>], ...]
