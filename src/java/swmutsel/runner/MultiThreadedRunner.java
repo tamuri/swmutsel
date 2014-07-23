@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import org.apache.commons.math3.optim.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
+import org.apache.commons.math3.optim.nonlinear.scalar.MultivariateOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer;
@@ -692,8 +693,19 @@ public class MultiThreadedRunner extends Runner {
 
                         LikelihoodCalculatorFunction function = new LikelihoodCalculatorFunction(calculator, Lists.newArrayList(models.values()));
 
-                        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
-                        SimplexOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
+                        // The default SimplexOptimiser does not pass the iterations to ConvergenceChecker - we need to keep track ourselves!
+                        ConvergenceChecker<PointValuePair> convergenceChecker = new ConvergenceChecker<PointValuePair>() {
+                            final ConvergenceChecker<PointValuePair> checker = new SimplePointChecker<PointValuePair>(-1, Constants.CONVERGENCE_TOL, Constants.MAX_ITERATIONS);
+                            int iteration = 0;
+
+                            @Override
+                            public boolean converged(int ignored, PointValuePair previous, PointValuePair current) {
+                                if (previous != current) iteration++;
+                                return checker.converged(iteration, previous, current);
+                            }
+                        };
+
+                        MultivariateOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
 
                         double[] initialGuess = function.getCurrentParameters();
 

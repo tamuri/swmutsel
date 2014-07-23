@@ -36,7 +36,9 @@ public class Constants {
     /**
      * Terminate the optimisation routine after this number of evaluations.
      */
-    public static final int MAX_EVALUATIONS = 8000;
+    public static final int MAX_EVALUATIONS = 12000;
+    // For SimplexOptimiser, iterations ~ 0.75 * evaluations
+    public static final int MAX_ITERATIONS = 6000;
 
     /**
      * To constrain MLE of fitness within FITNESS_BOUND, return this log-likelihood if we step outside of bounds.
@@ -46,8 +48,8 @@ public class Constants {
     /**
      * Yang's method of scaling partials on very large trees to avoid numerical underflow.
      */
-    public static final double SCALING_THRESHOLD = 1e-5;
-    public static final int SCALING_NODE_STEP = 5;
+    public static final double SCALING_THRESHOLD = (1.0 / Math.pow(2, 128));
+    public static final int SCALING_NODE_STEP = 1;
 
     /**
      * How to split the branch connecting heterogeneous models (e.g. 0.5 = half-way).
