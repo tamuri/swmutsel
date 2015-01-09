@@ -1,13 +1,15 @@
+
 This is swMutSel, a program to estimate fitnesses of amino acids in protein-
 coding genes using the evolution model of Halpern and Bruno (1998) and Tamuri et
 al. (2012, 2014). The program takes as input an alignment of protein-coding
 gene sequences and a phylogeny (tree) of the sequences, and outputs the
 fitnesses of each amino acid at each location in the protein-coding gene.
 
-DOWNLOAD
-       https://github.com/tamuri/swmutsel/releases/download/v1.0/swmutsel.jar
 
 SYNOPSIS
+
+       Analyse Data Using the SwMutSel Model:
+
        java -jar swmutsel.jar
            -name <run_name>
            -sequences <sequence_file_name>
@@ -15,65 +17,82 @@ SYNOPSIS
            -geneticcode <standard | vertebrate_mit | plastid>
            [-penalty mvn,<sigma> | dirichlet,<alpha>]
            [-kappa <kappa>]
-           [-pi T,C,A,G]
-           [-scaling branch_scaling_factor]
-           [-fitness A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V]
-           [-fix mutation|branches|all]
+           [-pi <T>,<C>,<A>,<G>]
+           [-scaling <branch_scaling_factor>]
+           [-fitness <site>,A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V [-fitness ...], ...]
+           [-fix mutation|branches|all [-fix mutation|branches|all], ...]
            [-threads <cpu_cores>]
            [-distributed -host <host>:<port> [-host <host>:<port>], ...]
            [-sites <site>|<site_range>]
            [-restart-opt <no_of_restarts> [-restart-int <n_iterations>]]
            [-clademodel clade_label,clade_label[,clade_label[,...]]]
+           [-hessian]
            [-help]
+
+        Simulate Data Using the SwMutSel Model:
+
+        java -jar swmutsel.jar
+           -simulate
+           -name <run_name>
+           -tree <tree_file_name | tree_newick_string>
+           -geneticcode <standard | vertebrate_mit | plastid>
+           -sites <number_of_sites>
+           -kappa <kappa>
+           -pi <T>,<C>,<A>,<G>
+           -scaling <branch_scaling_factor>
+           [-fitness A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V [-fitness ...], ...]
+           [-fitnessfile <filename> [-fitnessfile <filename>], ...]
+           [-clademodel <clade_labels>]
+           [-shiftfrac <percentage>]
 
 OPTIONS
    Required
        -n, -name
               Specifies name for the run. Output files are prefixed with this name.
               Be careful! The program will overwrite files with the same name.
-       
+
        -s, -sequences
               Coding sequences alignment file name in PHYLIP format. Spaces are
               not allowed in sequence names.
-       
+
        -t, -tree
               Newick-formatted tree file name. The tree string can be supplied
               instead e.g. "-tree (A:0.1,(B:0.1,C:0.1));". Spaces are not allowed
               in the string.
-       
+
        -gc, -geneticcode
               The genetic code for the coding-sequences:
-       
+
               -gc standard       : The Standard Code
               -gc vertebrate_mit : The Vertbrate Mitochondrial Code
               -gc plastid        : The Bacterial, Archaeal and Plant Plastid Code
-       
+
    Model Parameters
        -p, -penalty
               The penalty to use for the penalised likelihood method. If not
               supplied, the usual (unpenalised) maximum likelihood method is used.
               Valid options are:
-       
+
               -p mvn,<s>       : Multivariate normal penalty with variance 2*<s>^2
               -p dirichlet,<a> : Dirichlet-based penalty with shape <a>
-       
+
        -k, -kappa
               The starting parameter value for the transition-transversion rate
               ratio. If you "-fix mutation" the parameter will not be estimated.
               DEFAULT: 1.0
-       
+
        -pi
               The starting parameter value for nucleotide base frequencies. Must
               be comma-separated with order T,C,A,G. The values are normalised to
               sum to 1. If you "-fix mutation" the parameter will not be estimated.
               DEFAULT: [0.25]
-       
+
        -c, -scaling
               The starting parameter value for branch scaling factor (applied to
               all branches). If you "-fix mutation" the parameter will not be
               estimated.
               DEFAULT: 1.0
-       
+
        -f, -fitness
               Comma-separated fitness parameters in canonical amino acid order.
               It is recommended that you do not construct these by hand but
@@ -83,27 +102,23 @@ OPTIONS
    Optimisation
        -fix
               Indicate whether you want the program to skip estimation of
-              mutational parameters, branch lengths, both or no optimisation at
-              all.
-       
+              mutational parameters, branch lengths or all parameters. For example,
+              if you want to calculate fitness only: "-fix mutation -fix branches"
+
               -fix mutation          : Fix the values (k, pi, c) of the mutational
                                        model.
 
               -fix branches          : Fix the branch lengths on the tree.
 
-              -fix mutation,branches : Fix both mutational model parameters and
-                                       branch lengths, and only estimate the
-                                       fitness parameters.
-
               -fix all               : Calculate the log-likelihood only.
-       
+
        -restart-opt
               Specifies the number of optimiser restarts for site-wise fitness
               parameter estimation. The is to prevent estimates being stuck at a
               local optima. The program will restart fitness estimation, with
               random initial values, the specified number of times.
               DEFAULT: 1
-       
+
        -restart-int
               Specify how often to estimate fitness parameters with multiple
               restarts. Restarting the fitness parameter estimation is expensive
@@ -112,7 +127,7 @@ OPTIONS
               single round is one iteration of mutation, branch length and fitness
               estimation.
               DEFAULT: 5
-       
+
        -sites
               Specify a single site, or a range of sites, for site-wise fitness
               estimation. If you provide this option, you implicitly fix the
@@ -120,17 +135,17 @@ OPTIONS
               A range is specified using a dash e.g. "-sites 10-20" will estimate
               the site-wise fitnesses for all sites between site 10 and site 20,
               inclusive.
-       
+
    Parallelisation
        -T, -threads
               Specify the number of cores to use for multi-threaded operation.
-       
+
        -D, -distributed
               Indicate the program will run in distributed mode. This requires the
               initialisation of (usually) multiple slaves. Each slave will have
               an associated IP address (or hostname) and port (which you supply
               using "-H")
-       
+
        -H, -host
               If the program is running in distributed mode (using the "-D" option),
               supply slaves' host IP and port using "-H <slave_ip>:<port>"
@@ -175,5 +190,6 @@ CITATION
 
        Tamuri AU, Goldman N and dos Reis M. (2014) A penalized likelihood method
        for estimating the distribution of selection coefficients from
-       phylogenetic data. Genetics.
+       phylogenetic data. Genetics, 197: 257-271.
+
 

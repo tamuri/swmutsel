@@ -23,7 +23,9 @@
         <mkdir dir="${dist.dir}" />
         <copy todir="${build.dir}">
            <fileset dir="src" includes="resources/help.txt" />
-           <fileset dir="src" includes="resources/command.txt" />
+           <fileset dir="src" includes="resources/command_fmutsel0.txt" />
+           <fileset dir="src" includes="resources/command_simulate.txt" />
+           <fileset dir="src" includes="resources/command_swmutsel.txt" />
            <fileset dir="src" includes="resources/description.txt" />
         </copy>
     </target>
@@ -48,12 +50,14 @@
         <tstamp>
             <format property="timenow" pattern="yyMMddHHmm" />
         </tstamp>
-        <jar manifest="src/resources/META-INF/MANIFEST.MF" destfile="${dist.dir}\${ant.project.name}-${timenow}.jar" basedir="${build.dir}">
+        <jar manifest="src/resources/META-INF/MANIFEST.MF" destfile="${dist.dir}\${ant.project.name}.jar" basedir="${build.dir}">
             <zipgroupfileset dir="lib" includes="*.jar" />
         </jar>
     </target>
 
-    <target name="dist" depends="clean, makedir, compile, jar">
+    <target name="all" depends="clean, makedir, compile, jar" />
+
+    <target name="dist" depends="makedir, compile, jar">
         <description>Build everything</description>
     </target>
 
