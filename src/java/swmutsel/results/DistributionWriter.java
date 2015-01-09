@@ -5,7 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import swmutsel.Constants;
-import swmutsel.options.GeneticCodeConverter;
+import swmutsel.cli.jc.GeneticCodeConverter;
 import swmutsel.utils.GeneticCode;
 
 import java.io.BufferedReader;
@@ -18,7 +18,7 @@ import java.io.FileReader;
  * of selection coefficients for mutations and substitutions (all & non-synonymous only for both).
  * <p/>
  * TODO: PB2 plots significant vs. other sites (i.e. the black + red histogram in paper)
- * TODO: Really needs a less hard-coded way to correct construct the histogram bins, allowing some options etc.
+ * TODO: Really needs a less hard-coded way to correct construct the histogram bins, allowing some args etc.
  *
  * @author Asif Tamuri (atamuri@nimr.mrc.ac.uk)
  * @see ModelWriter

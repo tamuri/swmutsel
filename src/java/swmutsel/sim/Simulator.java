@@ -2,7 +2,6 @@ package swmutsel.sim;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Doubles;
 import pal.misc.Identifier;
 import pal.tree.Node;
 import pal.tree.Tree;
@@ -10,6 +9,7 @@ import swmutsel.Constants;
 import swmutsel.model.SwMut;
 import swmutsel.model.SwMutSel;
 import swmutsel.model.parameters.Fitness;
+import swmutsel.utils.CoreUtils;
 import swmutsel.utils.GeneticCode;
 import swmutsel.utils.PhyloUtils;
 
@@ -29,7 +29,7 @@ public class Simulator {
     private List<String> heteroClades;
     private List<Integer> aminoAcids = Lists.newArrayList();
     private Map<String, SwMutSel> cladeModels = Maps.newHashMap();
-    private double[] Pt = new double[GeneticCode.CODON_STATES * GeneticCode.CODON_STATES];
+    private double[][] Pt = new double[GeneticCode.CODON_STATES][GeneticCode.CODON_STATES];
     private double shiftFraction;
 
     public void initialise(int sites) {
@@ -48,8 +48,8 @@ public class Simulator {
         }
     }
 
-    public void setTree(String tree) {
-        parsedTree = PhyloUtils.readTree(tree);
+    public void setTree(Tree tree) {
+        parsedTree = tree;
     }
 
     public void setMutation(double kappa, double[] pi, double mu) {
@@ -78,11 +78,11 @@ public class Simulator {
             if (this.heteroClades.size() == 1) {
                 model = "ALL";
 
-                this.cladeModels.get(model).getTransitionProbabilities(Pt, child.getBranchLength());
+                this.cladeModels.get(model).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength());
 
                 for (int j = 0; j < this.sites; j++) {
                     int row = seqout.get(parent.getIdentifier())[j];
-                    seqout.get(child.getIdentifier())[j] = selectRandomCharacter(Arrays.copyOfRange(Pt, row * GeneticCode.CODON_STATES, row * GeneticCode.CODON_STATES + GeneticCode.CODON_STATES));
+                    seqout.get(child.getIdentifier())[j] = selectRandomCharacter(Pt[row]);
                 }
 
             } else {
@@ -98,11 +98,11 @@ public class Simulator {
                         switchPoint[j] = seqout.get(parent.getIdentifier())[j];
                     }
                 } else {
-                    this.cladeModels.get(modelA).getTransitionProbabilities(Pt, child.getBranchLength() * shiftFraction);
+                    this.cladeModels.get(modelA).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength() * shiftFraction);
 
                     for (int j = 0; j < this.sites; j++) {
                         int row = seqout.get(parent.getIdentifier())[j];
-                        switchPoint[j] = selectRandomCharacter(Arrays.copyOfRange(Pt, row * GeneticCode.CODON_STATES, row * GeneticCode.CODON_STATES + GeneticCode.CODON_STATES));
+                        switchPoint[j] = selectRandomCharacter(Pt[row]);
                     }
                 }
 
@@ -112,11 +112,11 @@ public class Simulator {
                         seqout.get(child.getIdentifier())[j] = switchPoint[j];
                     }
                 } else {
-                    this.cladeModels.get(modelB).getTransitionProbabilities(Pt, child.getBranchLength() * (1 - shiftFraction));
+                    this.cladeModels.get(modelB).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength() * (1 - shiftFraction));
 
                     for (int j = 0; j < this.sites; j++) {
                         int row = switchPoint[j];
-                        seqout.get(child.getIdentifier())[j] = selectRandomCharacter(Arrays.copyOfRange(Pt, row * GeneticCode.CODON_STATES, row * GeneticCode.CODON_STATES + GeneticCode.CODON_STATES));
+                        seqout.get(child.getIdentifier())[j] = selectRandomCharacter(Pt[row]);
                     }
                 }
             }
@@ -175,7 +175,7 @@ public class Simulator {
         SwMutSel codonModel = new SwMutSel(this.globals, new Fitness(f));
         codonModel.build();
 
-        System.out.printf("Amino acid frequencies are:\n%s\n", Doubles.join(", ", PhyloUtils.getAminoAcidFrequencies(codonModel.getCodonFrequencies())));
+        System.out.printf("Amino acid frequencies are:\n%s\n", CoreUtils.join("%.7f", " ", PhyloUtils.getAminoAcidFrequencies(codonModel.getCodonFrequencies())));
         this.cladeModels.put(model, codonModel);
     }
 

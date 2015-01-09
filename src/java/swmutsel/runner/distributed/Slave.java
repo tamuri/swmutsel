@@ -7,9 +7,9 @@ import com.google.common.collect.Table;
 import com.googlecode.hessianserver.HessianServer;
 import com.googlecode.hessianserver.HessianServiceDefinition;
 import pal.alignment.Alignment;
-import swmutsel.ArgumentsProcessor;
-import swmutsel.options.AlignmentConverter;
-import swmutsel.options.GeneticCodeConverter;
+import swmutsel.cli.ArgumentsProcessor;
+import swmutsel.cli.jc.AlignmentConverter;
+import swmutsel.cli.jc.GeneticCodeConverter;
 import swmutsel.utils.CoreUtils;
 import swmutsel.utils.GeneticCode;
 
@@ -30,9 +30,11 @@ public class Slave {
 
     public Slave(String[] args) {
         ServerOptions options = new ServerOptions();
-        new JCommander(options).parse(args);
+        JCommander jc = new JCommander(options);
+        jc.setAcceptUnknownOptions(true);
+        jc.parse(args);
 
-        Table<String, Integer, Byte> allSites = new ArgumentsProcessor().getCleanedSitesTable(options.alignment);
+        Table<String, Integer, Byte> allSites = ArgumentsProcessor.getAlignmentTable(options.alignment);
 
         SlaveImpl service = new SlaveImpl(allSites, options.threads);
 
@@ -102,11 +104,11 @@ public class Slave {
     }
 */
 
-    private class ServerOptions {
+    static private class ServerOptions {
         @Parameter(names = {"-s", "-sequences"}, converter = AlignmentConverter.class, required = true)
         public Alignment alignment;
 
-        @Parameter(names = "-threads")
+        @Parameter(names = {"-threads", "-T"})
         public int threads = 1;
 
         @Parameter(names = {"-gc", "-geneticcode"}, converter = GeneticCodeConverter.class, required = true)

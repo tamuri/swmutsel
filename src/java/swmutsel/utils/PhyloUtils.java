@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
 import pal.alignment.Alignment;
@@ -295,7 +296,7 @@ public class PhyloUtils {
 
                     @Override
                     public void remove() {
-                        throw new RuntimeException("externals.remove() Not implemented.");
+                        throw new RuntimeException("externalNodes.remove() Not implemented.");
                     }
                 };
             }
@@ -318,5 +319,116 @@ public class PhyloUtils {
             freqs[GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(i)] += codonPis[i];
         }
         return freqs;
+    }
+
+    public static double[] getObservedAminoAcidFrequencies(Table<String, Integer, Byte> sites) {
+        double[] out = new double[GeneticCode.AMINO_ACID_STATES];
+
+        for (Map<Integer, Byte> row : sites.rowMap().values()) {
+            for (byte c : row.values()) {
+                if (GeneticCode.getInstance().isSenseCodon(c)) {
+                    int r = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(c);
+                    out[r]++;
+                }
+            }
+        }
+        double total = CoreUtils.sum(out);
+        for (int i = 0; i < out.length; i++) {
+            out[i] /= total;
+        }
+
+        return out;
+    }
+
+    public static double[] aminoAcidToFitness(double[] frequencies, int[] order) {
+        if (order == null) order = CoreUtils.seq(0, 19);
+
+        double[] out = new double[GeneticCode.AMINO_ACID_STATES];
+
+        for (int i = 0; i < GeneticCode.AMINO_ACID_STATES; i++) {
+            out[i] = Math.log(frequencies[order[i]]);
+        }
+
+        double scale = out[order[0]];
+
+        for (int i = 0; i < GeneticCode.AMINO_ACID_STATES; i++) {
+            out[i] = out[i] - scale;
+        }
+
+        return out;
+    }
+
+    public static double[] getObservedNucleotideFrequencies(Table<String, Integer, Byte> sites) {
+        int[] count = new int[4];
+        for (Map.Entry<String, Map<Integer, Byte>> e : sites.rowMap().entrySet()) {
+            Map<Integer, Byte> sequence = e.getValue();
+            for (int c : sequence.values()) {
+                if (GeneticCode.getInstance().isSenseCodon(c)) {
+                    char[] n = GeneticCode.getInstance().getNucleotidesFromCodonIndex(c);
+                    for (char nn : n) {
+                        count[GeneticCode.getInstance().getNucleotideIndexByChar(nn)]++;
+                    }
+                }
+            }
+        }
+
+        int total = count[0] + count[1] + count[2] + count[3];
+
+        double[] freqs = new double[4];
+        freqs[0] = count[0] / (double) total;
+        freqs[1] = count[1] / (double) total;
+        freqs[2] = count[2] / (double) total;
+        freqs[3] = count[3] / (double) total;
+
+        return freqs;
+    }
+
+    public static void addParent(Node n, Set<Integer> nodes) {
+        nodes.add(n.getNumber());
+        if (n.isRoot()) return;
+        addParent(n.getParent(), nodes);
+    }
+
+    public static Pair<Map<Integer, Integer>, Set<Integer>> getNodeChanges(Tree tree, Map<Node, Pair<Integer, Set<Node>>> nodeRelationships) {
+        Map<Integer, Integer> oldToNewMapping = Maps.newHashMap();
+        Set<Integer> changedNodes = Sets.newHashSet();
+
+        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
+            Node n = tree.getInternalNode(i);
+            Set<Node> children = Sets.newHashSet();
+
+            oldToNewMapping.put(nodeRelationships.get(n).first, n.getNumber());
+
+            for (int j = 0; j < n.getChildCount(); j++) {
+                children.add(n.getChild(j));
+            }
+
+            if (Sets.difference(nodeRelationships.get(n).second, children).size() > 0) {
+                // this has changed - get all parents to root
+                addParent(n, changedNodes);
+            }
+        }
+
+        return Pair.of(oldToNewMapping, changedNodes);
+    }
+
+    public static void saveNodeRelationships(Tree tree, Map<Node, Pair<Integer, Set<Node>>> nodeRelationships) {
+        nodeRelationships.clear();
+        for (int i = 0; i < tree.getInternalNodeCount(); i++) {
+            Node n = tree.getInternalNode(i);
+            Set<Node> children = Sets.newHashSet();
+
+            for (int j = 0; j < n.getChildCount(); j++) {
+                children.add(n.getChild(j));
+            }
+
+            nodeRelationships.put(n, Pair.of(n.getNumber(), children));
+        }
+
+        Set<Node> nullSet = Sets.newHashSet();
+
+        for (Node n: externalNodes(tree)) {
+            nodeRelationships.put(n, Pair.of(n.getNumber(), nullSet));
+        }
     }
 }

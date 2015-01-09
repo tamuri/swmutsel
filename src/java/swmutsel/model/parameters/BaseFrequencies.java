@@ -12,7 +12,6 @@ import java.util.Arrays;
 public class BaseFrequencies extends Parameter {
 
     private static final long serialVersionUID = 2674842918979799977L;
-    private final double[] optimisable = new double[3];
 
     public BaseFrequencies() {
         setArgument("-pi");
@@ -22,6 +21,9 @@ public class BaseFrequencies extends Parameter {
 
     public BaseFrequencies(double[] pi) {
         this();
+        double sum = CoreUtils.sum(pi);
+        if (sum != 1)
+            CoreUtils.msg("WARNING: Nucleotide frequencies [ %s ] do not sum to 1. Normalising.\n", CoreUtils.join("%.5f", ", ", pi));
         set(pi);
     }
 
@@ -68,9 +70,7 @@ public class BaseFrequencies extends Parameter {
 
     @Override
     public String toString() {
-        return "BaseFrequencies{" +
-                "frequencies=" + Arrays.toString(frequencies) +
-                '}';
+        return String.format("BaseFrequencies{frequencies=%s}", CoreUtils.join("%.7f", ", ", frequencies));
     }
 
     @Override

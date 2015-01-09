@@ -1,7 +1,8 @@
-package swmutsel.options;
+package swmutsel.cli.jc;
 
 import com.beust.jcommander.IStringConverter;
 import pal.alignment.Alignment;
+import swmutsel.cli.ArgumentsProcessor;
 import swmutsel.utils.CoreUtils;
 import swmutsel.utils.PhyloUtils;
 
@@ -13,6 +14,6 @@ public class AlignmentConverter implements IStringConverter<Alignment> {
     @Override
     public Alignment convert(String value) {
         CoreUtils.msg("Reading alignment: %s\n", value);
-        return PhyloUtils.readAlignment(value);
+        return ArgumentsProcessor.loadPalAlignment(value);
     }
 }

@@ -1,0 +1,15 @@
+        Analyse Data Using the FMutSel0 Model:
+
+        java -jar swmutsel.jar
+           -fmutsel0
+           -name <run_name>
+           -sequences <sequence_file_name>
+           -tree <tree_file_name | tree_newick_string>
+           -geneticcode <standard | vertebrate_mit | plastid>
+           [-classes <num_classes_in_mixture>]
+           [-kappa <kappa>]
+           [-pi <T>,<C>,<A>,<G>]
+           [-omega <omega>]
+           [-fitness A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V [-fitness ...], ...]
+           [-threads]
+           [-hessian]

@@ -3,11 +3,11 @@ package swmutsel.results;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.google.common.collect.Lists;
+import swmutsel.cli.jc.DoubleArrayConverter;
+import swmutsel.cli.jc.GeneticCodeConverter;
 import swmutsel.model.parameters.BaseFrequencies;
 import swmutsel.model.parameters.BranchScaling;
 import swmutsel.model.parameters.TsTvRatio;
-import swmutsel.options.DoubleArrayConverter;
-import swmutsel.options.GeneticCodeConverter;
 import swmutsel.utils.GeneticCode;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class All {
     }
 
     public static void main(String[] args) throws Exception {
-        // Parse command-line options
+        // Parse command-line args
         Options options = new Options();
         JCommander jc = new JCommander(options);
         jc.parse(args);

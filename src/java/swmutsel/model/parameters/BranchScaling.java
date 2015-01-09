@@ -31,12 +31,12 @@ public class BranchScaling extends Parameter {
 
     @Override
     public double[] getOptimisable() {
-        return new double[]{this.c};
+        return new double[]{Math.log(get())};
     }
 
     @Override
     public void setOptimisable(double[] params) {
-        set(params[0]);
+        set(Math.exp(params[0]));
     }
 
     @Override

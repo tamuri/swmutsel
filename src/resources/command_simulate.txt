@@ -1,0 +1,15 @@
+        Simulate Data Using the SwMutSel Model:
+
+        java -jar swmutsel.jar
+           -simulate
+           -name <run_name>
+           -tree <tree_file_name | tree_newick_string>
+           -geneticcode <standard | vertebrate_mit | plastid>
+           -sites <number_of_sites>
+           -kappa <kappa>
+           -pi <T>,<C>,<A>,<G>
+           -scaling <branch_scaling_factor>
+           [-fitness A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V [-fitness ...], ...]
+           [-fitnessfile <filename> [-fitnessfile <filename>], ...]
+           [-clademodel <clade_labels>]
+           [-shiftfrac <percentage>]

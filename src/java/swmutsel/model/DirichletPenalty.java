@@ -32,9 +32,10 @@ public class DirichletPenalty implements Penalty {
                 + ((alpha - 1) * Math.log(1 - theta.zSum()))
                 + Math.log(Math.abs(Algebra.DEFAULT.det(jacobian(theta))));
 
+    }
 
-        // MdR's function in the manuscript:
-        /*
+    // Mario's calculation (as in paper)
+    private double calculateMdR(final double[] fitness) {
         DoubleMatrix1D theta = DoubleFactory1D.dense.make(20, 0.0);
         for (int i = 0; i < fitness.length; i++) theta.setQuick(i, fitness[i]);
 
@@ -42,9 +43,6 @@ public class DirichletPenalty implements Penalty {
         theta.assign(Functions.div(theta.zSum()));
 
         return alpha * theta.aggregate(Functions.plus, Functions.log);
-        */
-
-
     }
 
     private DoubleMatrix2D jacobian(final DoubleMatrix1D theta) {

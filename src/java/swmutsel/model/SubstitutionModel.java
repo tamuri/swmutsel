@@ -1,9 +1,14 @@
 package swmutsel.model;
 
-import com.beust.jcommander.internal.Lists;
+import cern.colt.matrix.DoubleFactory2D;
+import cern.colt.matrix.DoubleMatrix2D;
+import com.google.common.collect.Lists;
 import swmutsel.model.parameters.Parameter;
+import swmutsel.utils.MathUtils;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,18 +17,89 @@ import java.util.List;
  */
 public abstract class SubstitutionModel implements Serializable {
     private static final long serialVersionUID = 6408557902068035305L;
-    private List<Parameter> parameters;
+    private final List<Parameter> parameters = Lists.newArrayList();
 
-    public abstract void getTransitionProbabilities(double[] matrix, double branchlength);
+    protected static double getRelativeFixationProbability(final double S) {
+        if (S == 0) return 1;
+        if (S < -1e3) return 0;
+        if (S > 1e3) return S;
+        return S / -Math.expm1(-S);
 
+//      return (S == 0) ? 1 : S / (1 - Math.exp(-S));
+    }
+
+    /**
+     * B = Π^(½) * Q * Π^(-½) - Yang CME - pg. 69, eq. 2.26
+     */
+    protected static DoubleMatrix2D makeB(final double[] Q, final int numSenseCodons, final double[] senseCodonFrequencies) {
+        DoubleMatrix2D B = DoubleFactory2D.dense.make(numSenseCodons, numSenseCodons);
+        for (int i = 0; i < numSenseCodons; i++) {
+            for (int j = 0; j < numSenseCodons; j++) {
+                B.setQuick(i, j, Q[i * numSenseCodons + j] * Math.sqrt(senseCodonFrequencies[i]) / Math.sqrt(senseCodonFrequencies[j]));
+            }
+        }
+        return B;
+    }
+
+    /**
+     * Diagonalise B = R * Λ * R⁻¹ - Yang CME - pg. 69, eq. 2.27
+     *
+     * where B = Π^(½) * Q * Π^(-½)
+     *
+     * so
+     *
+     * Q = (Π^(-½) * R) * Λ * (R⁻¹ * Π^(½))       eq. 2.28
+     *
+     * and
+     *
+     * U   = Π^(-½) * R
+     * U⁻¹ = R⁻¹ * Π^(½)
+     *
+     * Note, R⁻¹ == transpose(R)
+     *
+     * and so
+     *
+     * P(t) =  U * exp(Λ * t) * U⁻¹
+     *
+     */
+    protected static void setEigenFactors(final DoubleMatrix2D B, final double[] lambda, final int states, final double[] freq, final double[][] U, final double[][] Uinv) {
+        // TODO: No need to create R - could reuse B
+        double[][] R = new double[states][states];
+
+        MathUtils.setEigenFactors(B, lambda, R, states);
+
+        double[] U_row, Uinv_row;
+
+        for (int row = 0; row < states; row++) {
+            double piInvSqrt = 1 / Math.sqrt(freq[row]);
+            U_row = U[row];
+            Uinv_row = Uinv[row];
+            for (int column = 0; column < states; column++) {
+                U_row[column] = piInvSqrt * R[row][column]; // U = Π^(-½) * R
+                Uinv_row[column] = R[column][row] * Math.sqrt(freq[column]); // U⁻¹ = R⁻¹ * Π^(½)
+            }
+        }
+    }
+
+    public abstract TransProbCalculator getPtCalculator();
 
     public abstract double[] getCodonFrequencies();
     public abstract void build();
     public abstract boolean parametersValid();
 
-    public void setParameters(Parameter... parameters) {
-        this.parameters = Lists.newArrayList(parameters);
+    public void addParameters(Parameter... parameters) {
+        Collections.addAll(this.parameters, parameters);
     }
+
+    public void addParameters(Collection<? extends Parameter> parameters) {
+        this.parameters.addAll(parameters);
+    }
+
+    public void clearParameters() {
+        this.parameters.clear();
+    }
+
+
 
     public List<Parameter> getParameters() {
         return this.parameters;

@@ -4,7 +4,9 @@ import swmutsel.model.parameters.BaseFrequencies;
 import swmutsel.model.parameters.BranchScaling;
 import swmutsel.model.parameters.Tau;
 import swmutsel.model.parameters.TsTvRatio;
+import swmutsel.utils.CoreUtils;
 import swmutsel.utils.GeneticCode;
+import swmutsel.utils.Pair;
 
 import java.io.Serializable;
 
@@ -25,7 +27,7 @@ public class SwMut extends SubstitutionModel implements Serializable {
     private final BaseFrequencies pi;
     public static final double[] DEFAULT_BASE_FREQUENCIES = new double[]{0.25, 0.25, 0.25, 0.25};
 
-    private final Tau tau = new Tau(); // fixed to 0!
+    private final Tau tau;
 
     private final double[] codonFrequencies = new double[GeneticCode.CODON_STATES];
     private final double[] mutationMatrix = new double[GeneticCode.CODON_STATES * GeneticCode.CODON_STATES];
@@ -34,7 +36,10 @@ public class SwMut extends SubstitutionModel implements Serializable {
         this.kappa = kappa;
         this.c = c;
         this.pi = pi;
-        setParameters(this.kappa, this.pi, this.c);
+        this.tau = new Tau(Tau.getDefault());
+        super.clearParameters();
+        super.addParameters(this.kappa, this.pi, this.c);
+        build();
     }
 
     public SwMut(double kappa, double scaling, double[] pi) {
@@ -45,14 +50,26 @@ public class SwMut extends SubstitutionModel implements Serializable {
         this(new TsTvRatio(DEFAULT_KAPPA), new BranchScaling(DEFAULT_SCALING), new BaseFrequencies(DEFAULT_BASE_FREQUENCIES));
     }
 
-    @Override
-    public boolean parametersValid() {
-        return this.kappa.get() > 0 && this.c.get() > 0;
+    public void setTau(double tau) {
+        CoreUtils.msg("WARNING: You're using the -tau parameter!\n");
+        this.tau.set(tau);
     }
 
     @Override
-    public void getTransitionProbabilities(double[] matrix, double branchlength) {
+    public boolean parametersValid() {
+        return true;
+    }
+
+    /*
+    @Override
+    public void getTransitionProbabilities(double[][] matrix, double branchlength) {
         throw new RuntimeException("ERROR: Not implemented. Use SwMutSel instead!");
+    }
+*/
+
+    @Override
+    public TransProbCalculator getPtCalculator() {
+        throw new RuntimeException("ERROR: Not implemented!");
     }
 
     @Override
@@ -63,6 +80,32 @@ public class SwMut extends SubstitutionModel implements Serializable {
     public void build() {
         setCodonFrequencies();
         setMutationRate();
+    }
+
+    public Pair<Double, Double> getRhoNonSynAndSyn() {
+        double totalSynonymous = 0;
+        double totalNonSynonymous = 0;
+
+        for (int i = 0; i < GeneticCode.CODON_STATES; i++) {
+            for (int j = 0; j < GeneticCode.CODON_STATES; j++) {
+
+                if (i == j) continue;
+
+                int aaI = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(i);
+                int aaJ = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(j);
+
+                double rate = getCodonFrequency(i) * getMutationRate(i, j);
+
+                // NOTE: we are including rates to/from STOP codons
+                if (aaI == aaJ) {
+                    totalSynonymous += rate;
+                } else {
+                    totalNonSynonymous += rate;
+                }
+            }
+        }
+
+        return Pair.of(totalNonSynonymous, totalSynonymous);
     }
 
     public double getMutationRate(int i, int j) {
@@ -104,12 +147,15 @@ public class SwMut extends SubstitutionModel implements Serializable {
                     scaling += mutationMatrix[i * GeneticCode.CODON_STATES + j] * codonFrequencies[i];
                 } else {
                     // No multiple substitutions allowed
-                    mutationMatrix[i * GeneticCode.CODON_STATES + j] = 0;
+                    //mutationMatrix[i * GeneticCode.CODON_STATES + j] = 0;
+
+
+                /* Implementation with tau:                 */
+
+                    mutationMatrix[i * GeneticCode.CODON_STATES + j] = Math.pow(tau.get(), changes - 1) * Math.pow(kappa.get(), transitions) * prodPi;
+                    scaling += mutationMatrix[i * GeneticCode.CODON_STATES + j] * codonFrequencies[i];
                 }
 
-                /* Implementation with tau:
-                mutationMatrix[i * GeneticCode.CODON_STATES + j] = Math.pow(tau, changes - 1) * Math.pow(kappa, transitions) * prod_pi;
-                 */
             }
         }
 

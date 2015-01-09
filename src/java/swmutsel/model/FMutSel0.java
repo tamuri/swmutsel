@@ -1,21 +1,14 @@
 package swmutsel.model;
 
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.linalg.EigenvalueDecomposition;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import swmutsel.MatrixArrayPool;
 import swmutsel.model.parameters.BaseFrequencies;
 import swmutsel.model.parameters.Fitness;
 import swmutsel.model.parameters.Omega;
 import swmutsel.model.parameters.TsTvRatio;
+import swmutsel.utils.CoreUtils;
 import swmutsel.utils.GeneticCode;
 
 import java.io.Serializable;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Author: Asif Tamuri (tamuri@ebi.ac.uk)
@@ -32,32 +25,43 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
     private final Fitness fitness;
 
     private final int[] senseCodons;
+    private final int numSenseCodons;
+    
     private final double[] senseCodonFrequencies;
 
-    private DoubleMatrix1D lambda; // eigenvalue of B
-    private final double[] U;
-    private final double[] UInv;
+    private final double[] lambda; // eigenvalue of B
+    private final double[][] U;
+    private final double[][] UInv;
 
-    private final LoadingCache<Double, double[]> cachedTransitionP;
+    private volatile transient TransProbCalculator calculator;
 
     public FMutSel0(double kappa, double omega, double[] pi, double[] fitness) {
         this(new TsTvRatio(kappa), new Omega(omega), new BaseFrequencies(pi), new Fitness(fitness));
     }
+
+    public void setScale(double scale) {
+        this.scale = scale;
+    }
+
+    private double scale = -1;
 
     public FMutSel0(TsTvRatio kappa, Omega omega, BaseFrequencies pi, Fitness fitness) {
         this.kappa = kappa;
         this.omega = omega;
         this.pi = pi;
         this.fitness = fitness;
-        setParameters(pi, kappa, omega, fitness);
+
+        super.clearParameters();
+        super.addParameters(pi, kappa, omega, fitness);
 
         this.senseCodons = GeneticCode.getInstance().getSenseCodons();
-        this.senseCodonFrequencies = new double[this.senseCodons.length];
+        this.numSenseCodons = this.senseCodons.length;
+        
+        this.senseCodonFrequencies = new double[this.numSenseCodons];
 
-        this.U = new double[this.senseCodons.length * this.senseCodons.length];
-        this.UInv = new double[this.senseCodons.length * this.senseCodons.length];
-
-        this.cachedTransitionP = CacheBuilder.newBuilder().build(new CachedPtLoader());
+        this.U = new double[this.numSenseCodons][this.numSenseCodons];
+        this.UInv = new double[this.numSenseCodons][this.numSenseCodons];
+        this.lambda = new double[this.numSenseCodons];
 
         build();
     }
@@ -65,8 +69,8 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
     @Override
     public void build() {
         setSenseCodonFrequencies();
-        setEigenFactors(makeB(makeQ()));
-        this.cachedTransitionP.invalidateAll();
+        setEigenFactors(makeB(makeQ(), numSenseCodons, senseCodonFrequencies));
+        this.calculator = TransProbCalcFactory.getPtCalculator(lambda, U, UInv, senseCodons, true);
     }
 
     @Override
@@ -76,23 +80,26 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
             if (this.fitness.get()[i] > 29 || this.fitness.get()[i] < -29) return false;
         }
 
-        return (this.kappa.get() > 0 && this.kappa.get() < 10) && (this.omega.get() > 0 && this.omega.get() < 10);
+        return true;
     }
 
     @Override
-    public void getTransitionProbabilities(double[] Pt, double branchLength) {
-        try {
-            double[] temp = cachedTransitionP.get(branchLength);
-            System.arraycopy(temp, 0, Pt, 0, Pt.length);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+    public TransProbCalculator getPtCalculator() {
+        /*if (changed || calculator == null) {
+            synchronized (this) {
+                if (changed || calculator == null) {
+                    this.calculator = TransProbCalcFactory.getPtCalculator(lambda, U, UInv, senseCodons, true);
+                    changed = false;
+                }
+            }
+        }*/
+        return this.calculator;
     }
 
-    private void setSenseCodonFrequencies() {
+    public void setSenseCodonFrequencies() {
         double sum = 0;
 
-        for (int i = 0; i < this.senseCodons.length; i++) {
+        for (int i = 0; i < this.numSenseCodons; i++) {
             int codon = senseCodons[i];
             char[] nuc = GeneticCode.getInstance().getNucleotidesFromCodonIndex(codon);
 
@@ -111,12 +118,12 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
     }
 
 
-    private double[] makeQ() {
-        double[] Q = new double[this.senseCodons.length * this.senseCodons.length];
+    public double[] makeQ() {
+        double[] Q = new double[this.numSenseCodons * this.numSenseCodons];
 
         // Fill off-diagonal entries
-        for (int i = 0; i < senseCodons.length; i++) {
-            col: for (int j = 0; j < senseCodons.length; j++) {
+        for (int i = 0; i < numSenseCodons; i++) {
+            col: for (int j = 0; j < numSenseCodons; j++) {
 
                 if (i == j) continue;
 
@@ -161,101 +168,83 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
 
                 rate *= hS;
 
-                Q[i * senseCodons.length + j] = rate;
+                Q[i * numSenseCodons + j] = rate;
             }
         }
 
-        // Normalise so average rate is 1
         double sum = 0;
-        for (int i = 0; i < senseCodons.length; i++) {
-            for (int j = 0; j < senseCodons.length; j++) {
-                if (i == j ) continue;
-                sum += Q[i * senseCodons.length + j] * senseCodonFrequencies[i];
-            }
-        }
+        for (int i = 0; i < numSenseCodons; i++)
+            for (int j = 0; j < numSenseCodons; j++)
+                if (i != j)
+                    sum += Q[i * numSenseCodons + j] * senseCodonFrequencies[i];
 
-        for (int i = 0; i < Q.length; i++) Q[i]  = Q[i] / sum;
+        if (scale == -1) {
+            // Normalise so average rate is 1
+            for (int i = 0; i < Q.length; i++) Q[i] = Q[i] / sum;
+        } else if (scale > 0) {
+            for (int i = 0; i < Q.length; i++) Q[i] = Q[i] / scale;
+        } else {
+            // don't normalise at all! (i.e. scale = 0)
+        }
 
         // Each row sums to 0
-        for (int i = 0; i < senseCodons.length; i++) {
+        for (int i = 0; i < numSenseCodons; i++) {
             sum = 0;
-            for (int j = 0; j < senseCodons.length; j++) {
-                sum += Q[i * senseCodons.length + j];
+            for (int j = 0; j < numSenseCodons; j++) {
+                sum += Q[i * numSenseCodons + j];
             }
-            Q[i * senseCodons.length + i] = -sum;
+            Q[i * numSenseCodons + i] = -sum;
         }
 
         return Q;
     }
 
-    private double getRelativeFixationProbability(double S) {
-        return (S == 0) ? 1 : S / (1 - Math.exp(-S));
+    public double getAverageRate() {
+        double[] Q = makeQ();
+        double sum = 0;
+        for (int i = 0; i < numSenseCodons; i++)
+            for (int j = 0; j < numSenseCodons; j++)
+                if (i != j)
+                    sum += Q[i * numSenseCodons + j] * senseCodonFrequencies[i];
+
+        return sum;
+
+
     }
 
-    private DoubleMatrix2D makeB(double[] Q) {
-        DoubleMatrix2D B = DoubleFactory2D.dense.make(senseCodons.length, senseCodons.length);
-        for (int i = 0; i < senseCodons.length; i++) {
-            for (int j = 0; j < senseCodons.length; j++) {
-                B.setQuick(i, j, Q[i * senseCodons.length + j] * Math.sqrt(this.senseCodonFrequencies[i]) / Math.sqrt(this.senseCodonFrequencies[j]));
-            }
-        }
 
-        return B;
-    }
-
-    private void setEigenFactors(DoubleMatrix2D B) {
-        EigenvalueDecomposition evdB = new EigenvalueDecomposition(B);
-        lambda = DoubleFactory2D.dense.diagonal(evdB.getD());
-
-        DoubleMatrix2D R = evdB.getV();
-
-        for (int i = 0; i < senseCodons.length; i++) {
-            double piSqrt = Math.sqrt(this.senseCodonFrequencies[i]);
-            double piInvSqrt = 1 / piSqrt;
-            for (int j = 0; j < senseCodons.length; j++) {
-                U[i * senseCodons.length + j] = piInvSqrt * R.getQuick(i, j);
-                UInv[j * senseCodons.length + i] = piSqrt * R.getQuick(i, j); // inverse(R) == transpose(R)
-            }
-        }
+    protected void setEigenFactors(DoubleMatrix2D B) {
+        setEigenFactors(B, this.lambda, this.numSenseCodons, this.senseCodonFrequencies, this.U, this.UInv);
     }
 
     @Override
     public double[] getCodonFrequencies() {
         // return frequencies for all 64 codons - compare to setSenseCodonFrequencies()
         double[] frequencies = new double[GeneticCode.CODON_STATES];
-        for (int i = 0; i < senseCodons.length; i++) {
+        for (int i = 0; i < numSenseCodons; i++) {
             frequencies[senseCodons[i]] = senseCodonFrequencies[i];
         }
         return frequencies;
     }
 
-    private class CachedPtLoader extends CacheLoader<Double, double[]> {
-        @Override
-        public double[] load(Double branchLength) throws Exception {
-            double[] Pt = new double[GeneticCode.CODON_STATES * GeneticCode.CODON_STATES];
-
-            double[] calc = MatrixArrayPool.popCodonMatrix();
-
-            // NOTE: We store matrices in row-major order: column i, row j
-            for (int i = 0; i < senseCodons.length; i++) { // for each column
-                double temp = Math.exp(branchLength * lambda.getQuick(i)); // get the diagonal of lambda (= column)
-                for (int j = 0; j < senseCodons.length; j++) { // for each row
-                    calc[j * senseCodons.length + i] = U[j * senseCodons.length + i] * temp;
-                }
-            }
-
-            for (int j = 0; j < senseCodons.length; j++) {
-                for (int i = 0; i < senseCodons.length; i++) {
-                    double p = 0;
-                    for (int k = 0; k < senseCodons.length; k++) {
-                        p += calc[i * senseCodons.length + k] * UInv[k * senseCodons.length + j];
-                    }
-                    if (p < 0) p = 0;
-                    Pt[senseCodons[i] * GeneticCode.CODON_STATES + senseCodons[j]] = p;
-                }
-            }
-            return Pt;
-        }
+    @Override
+    public String toString() {
+        return String.format("FMutSel0{ -kappa %.7f -omega %.7f -pi %s -fitness %s }",
+                kappa.get(),
+                omega.get(),
+                CoreUtils.join("%.7f", ",", pi.get()),
+                CoreUtils.join("%.7f", ",", fitness.get()));
     }
 
+    public TsTvRatio getKappa() {
+        return kappa;
+    }
+
+    public Omega getOmega() {
+        return omega;
+    }
+
+    public BaseFrequencies getPi() {
+        return pi;
+    }
 }

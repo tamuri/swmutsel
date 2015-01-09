@@ -55,17 +55,13 @@ OPTIONS
    Optimisation
        -fix
               Indicate whether you want the program to skip estimation of
-              mutational parameters, branch lengths, both or no optimisation at
-              all.
+              mutational parameters, branch lengths or all parameters. For example,
+              if you want to calculate fitness only: "-fix mutation -fix branches"
        
               -fix mutation          : Fix the values (k, pi, c) of the mutational
                                        model.
 
               -fix branches          : Fix the branch lengths on the tree.
-
-              -fix mutation,branches : Fix both mutational model parameters and
-                                       branch lengths, and only estimate the
-                                       fitness parameters.
 
               -fix all               : Calculate the log-likelihood only.
        

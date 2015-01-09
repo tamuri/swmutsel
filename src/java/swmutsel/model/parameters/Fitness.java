@@ -16,11 +16,11 @@ public class Fitness extends Parameter {
     private int[] fitnessOrderForOptimiser = new int[GeneticCode.AMINO_ACID_STATES];
 
     public Fitness() {
-        this(CoreUtils.seqi(0,19));
+        this(CoreUtils.seq(0, 19));
     }
 
     public Fitness(double[] fitness) {
-        this(CoreUtils.seqi(0, 19), fitness);
+        this(CoreUtils.seq(0, 19), fitness);
     }
 
     public Fitness(int[] order) {
@@ -73,4 +73,10 @@ public class Fitness extends Parameter {
         return 19;
     }
 
+    @Override
+    public String toString() {
+        return "Fitness{" +
+                "fitness=" + CoreUtils.join("%.7f", ", ", fitness) +
+                '}';
+    }
 }

@@ -8,6 +8,7 @@ import swmutsel.utils.Pair;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Wraps LikelihoodCalculator and adds penalty on Fitness parameters to log-likelihood.
@@ -38,8 +39,15 @@ public class PenalisedLikelihoodCalculator extends LikelihoodCalculator {
     }
 
     @Override
+    public double updateTree(Tree tree, Map<Integer, Integer> newToOldNumbering, Set<Integer> updateNodes) {
+        return super.updateTree(tree, newToOldNumbering, updateNodes) + calculatePenalty();
+    }
+
+    @Override
     public double getLogLikelihoodForBranch(int node, double branchLength) {
-        return super.getLogLikelihoodForBranch(node, branchLength) + calculatePenalty();
+        double out = super.getLogLikelihoodForBranch(node, branchLength);
+        out += calculatePenalty();
+        return out;
     }
 
     private double calculatePenalty() {

@@ -1,7 +1,6 @@
-package swmutsel.options;
+package swmutsel.cli.jc;
 
 import com.beust.jcommander.IStringConverter;
-import swmutsel.utils.CoreUtils;
 import swmutsel.utils.GeneticCode;
 
 /**
@@ -21,8 +20,6 @@ public class GeneticCodeConverter implements IStringConverter<GeneticCode> {
         } else {
             throw new RuntimeException("Unknown genetic code table '" + value + "'. Valid tables are 'standard', 'vertebrate_mit' and 'plastid'.\n");
         }
-
-        CoreUtils.msg("swmutsel.options.GeneticCodeConverter - Using %s genetic code.\n", value);
 
         return GeneticCode.getInstance();
     }

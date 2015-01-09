@@ -4,6 +4,12 @@
  */
 package com.googlecode.hessianserver;
 
+import com.caucho.hessian.io.SerializerFactory;
+import com.caucho.hessian.server.HessianSkeleton;
+import com.caucho.services.server.ServiceContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -13,13 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.caucho.hessian.io.SerializerFactory;
-import com.caucho.hessian.server.HessianSkeleton;
-import com.caucho.services.server.ServiceContext;
 
 /**
  * Listens for requests from hessian clients on a given port and invokes the

@@ -8,18 +8,26 @@ package swmutsel.model.parameters;
  */
 public class Tau extends Parameter {
     private static final long serialVersionUID = 2332885343496674578L;
-    private final double tau = 0.0;
+    private double tau = 0.0;
 
     public Tau() {
         setArgument("-tau");
+    }
+
+    public Tau(double tau) {
+        this.tau = tau;
+    }
+
+    public static double getDefault() {
+        return 0.0;
     }
 
     public double get() {
         return tau;
     }
 
-    public void set() {
-        // do nothing;
+    public void set(double tau) {
+        this.tau = tau;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package swmutsel.options;
+package swmutsel.cli.jc;
 
 import com.beust.jcommander.IStringConverter;
 import com.google.common.collect.ImmutableRangeSet;

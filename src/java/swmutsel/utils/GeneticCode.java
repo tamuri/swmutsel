@@ -13,7 +13,6 @@ import java.util.List;
  * @author Asif Tamuri (atamuri@nimr.mrc.ac.uk)
  */
 public final class GeneticCode {
-    private static final GeneticCode INSTANCE = new GeneticCode();
 
     private GeneticCode() {
         if (INSTANCE != null) {
@@ -32,8 +31,10 @@ public final class GeneticCode {
     public static final String STANDARD_CODE = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
     public static final String VERTEBRATE_MITOCHONDRIAL_CODE = "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG";
     public static final String PLASTID_CODE = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
+
     public static final int CODON_STATES = 64;
-    public static final int AMINO_ACID_STATES = AMINO_ACIDS.length;
+    public static final int AMINO_ACID_STATES = 20;
+    public static final int NUCLEOTIDE_STATES = 4;
 
     private static final char UNKNOWN_CHARACTER = '?';
     private static final String UNKNOWN_TLA = "???";
@@ -55,6 +56,8 @@ public final class GeneticCode {
         }
     }
 
+    private static int[] SENSE_CODONS;
+
     private static final String[] CODONS_TLA = new String[CODON_STATES];
 
     static {
@@ -67,6 +70,8 @@ public final class GeneticCode {
     // TODO: Stop codons should map to a 'stop' amino acid, 20, rather than -1! with fitness for analyses (MdR)
     private static final int[] CODONS_TO_AMINO_ACIDS = new int[CODON_STATES];
     private static final int[][] AMINO_ACIDS_TO_CODONS = new int[AMINO_ACID_STATES][];
+
+    private static final GeneticCode INSTANCE = new GeneticCode();
 
     static {
         // By default, this instance uses the standard genetic code
@@ -124,6 +129,8 @@ public final class GeneticCode {
             }
             AMINO_ACIDS_TO_CODONS[i] = Ints.toArray(codonStates);
         }
+
+        SENSE_CODONS = getInstance().setSenseCodons();
 
         /*
         System.out.printf("swmutsel.utils.GeneticCode - Stop codons: ");
@@ -184,11 +191,15 @@ public final class GeneticCode {
         return !isStopCodon(codon);
     }
 
-    public int[] getSenseCodons() {
+    public int[] setSenseCodons() {
         // This can be set once the genetic code is set.
         List<Integer> senseCodons = Lists.newArrayList();
         for (int i = 0; i < GeneticCode.CODON_STATES; i++) if (!GeneticCode.getInstance().isStopCodon(i)) senseCodons.add(i);
         return Ints.toArray(senseCodons);
+    }
+
+    public int[] getSenseCodons() {
+        return SENSE_CODONS;
     }
 
     public int getAminoAcidIndexFromCodonIndex(int i) {

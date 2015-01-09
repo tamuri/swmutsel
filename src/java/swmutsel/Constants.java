@@ -19,8 +19,9 @@ public class Constants {
     /**
      * When to assume convergence of MLE of fitness parameters (log-likelihood).
      */
-    public static final double CONVERGENCE_TOL = 5.0e-6;
+    public static double CONVERGENCE_TOL = 5.0e-6;
     public static final double SMALL_CHANGE = 1e-3;
+    public static final double MINIMUM_TOL = 1.0e-7;
 
     /**
      * Brent optimiser settings, used for one-at-a-time branch length optimisation
@@ -46,7 +47,8 @@ public class Constants {
     public static final double VERY_BAD_LIKELIHOOD = Double.NEGATIVE_INFINITY;
 
     /**
-     * Yang's method of scaling partials on very large trees to avoid numerical underflow.
+     * Scaling conditional probabilities to avoid underflow. See
+     * Yang, Z. (2000). Journal of Molecular Evolution, 51(5), 423–432.
      */
     public static final double SCALING_THRESHOLD = (1.0 / Math.pow(2, 128));
     public static final int SCALING_NODE_STEP = 1;
@@ -60,8 +62,9 @@ public class Constants {
      * For branch length optimisation constraints
      */
     public static final double INITIAL_BRANCH_LENGTH = 0.1;
-    public static final double MIN_BRANCH_LENGTH = 1e-7;
+    public static final double MIN_BRANCH_LENGTH = 1e-12;
     public static final double MAX_BRANCH_LENGTH = 10;
+    public static final int MAX_BRANCH_LENGTH_SMALL_CHANGES = 5;
 
     /**
      * The filenames for parsed results files.
@@ -73,12 +76,11 @@ public class Constants {
     public static final String PIAA_FILENAME = "PiAA.txt";
     public static final String F_FILENAME = "F.txt";
 
-    /**
-     * The name of the program .jar (for command-line option help)
-     */
-    public static final String OUTPUT_FILE_PREFIX = "swmutsel";
-    public static final String PROGRAM_JAR = "tdg12.jar";
-
-
+    public static final String RESOURCE_PATH = "/resources/";
+    public static final String HELP_DESCRIPTION = "description.txt";
+    public static final String HELP_COMMAND_FMUTSEL0 = "command_fmutsel0.txt";
+    public static final String HELP_COMMAND_SIMULATE = "command_simulate.txt";
+    public static final String HELP_COMMAND_SWMUTSEL = "command_swmutsel.txt";
+    public static final String HELP_FULL = "help.txt";
 
 }

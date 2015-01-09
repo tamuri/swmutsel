@@ -22,6 +22,10 @@ public class CodeTimer {
         return System.currentTimeMillis();
     }
 
+    public static void clear() {
+        times.clear();
+    }
+
     public static void printAll() {
         System.out.println("\n-------------------\nswmutsel.utils.CodeTimer\n-------------------");
         for (Map.Entry e : times.entrySet()) {

@@ -7,11 +7,9 @@ import com.google.common.primitives.Doubles;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Asif Tamuri (atamuri@nimr.mrc.ac.uk)
@@ -49,7 +47,9 @@ public class CoreUtils {
     }
 
     public static double sum(Collection<Double> list) {
-        return sum(Doubles.toArray(list));
+        double s = 0.0;
+        for (double d : list) s += d;
+        return s;
     }
 
     public static double[] alr(double[] p) {
@@ -111,7 +111,7 @@ public class CoreUtils {
         throw new IllegalStateException("Could not find a free TCP/IP port.");
     }
 
-   public static double[] repd(double x, int n) {
+   public static double[] rep(double x, int n) {
        double[] o = new double[n];
        for (int i = 0; i < n; i++) {
            o[i] = x;
@@ -119,7 +119,7 @@ public class CoreUtils {
        return o;
    }
 
-   public static int[] repi(int x, int n) {
+   public static int[] rep(int x, int n) {
        int[] o = new int[n];
        for (int i = 0; i < n; i++) {
            o[i] = x;
@@ -129,14 +129,24 @@ public class CoreUtils {
    }
 
    public static double[] seqd(double start, double end, double step) {
-       double[] o = new double[(int) ((end - start) / step) + 1];
-       for (int i = 0; i < o.length; i++) {
-           o[i] = (step * (i + start));
+       List<Double> out = new ArrayList<Double>();
+
+       out.add(start);
+
+       double n = start;
+       n += step;
+
+       while (n <= end) {
+           out.add(n);
+           n += step;
        }
+
+       double[] o = Doubles.toArray(out);
+
        return o;
    }
 
-   public static int[] seqi(int start, int end) {
+   public static int[] seq(int start, int end) {
        int[] o = new int[end - start + 1];
        for (int i = 0; i < o.length; i++) {
            o[i] = start + i;
@@ -182,6 +192,32 @@ public class CoreUtils {
    public static String convertStreamToString(java.io.InputStream is) {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
+    }
+
+    public static String join(String format, String join, double[] array) {
+        if (array.length == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(format, array[0]));
+        for (int i = 1; i < array.length; i++) {
+            sb.append(join);
+            sb.append(String.format(format, array[i]));
+        }
+        return sb.toString();
+    }
+
+    public static Throwable getRootCause(Throwable throwable) {
+        if (throwable.getCause() != null)
+            return getRootCause(throwable.getCause());
+
+        return throwable;
+    }
+
+    public static String getMinSecString(long millis) {
+        return String.format("%01d:%02d",
+                TimeUnit.MILLISECONDS.toMinutes(millis),
+                TimeUnit.MILLISECONDS.toSeconds(millis) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))
+        );
     }
 
 }

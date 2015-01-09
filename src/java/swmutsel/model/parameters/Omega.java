@@ -17,6 +17,10 @@ public class Omega extends Parameter {
         this.omega = omega;
     }
 
+    public static double getDefault() {
+        return 1.0;
+    }
+
     public double get() {
         return omega;
     }
@@ -27,12 +31,12 @@ public class Omega extends Parameter {
 
     @Override
     public double[] getOptimisable() {
-        return new double[]{omega};
+        return new double[]{Math.log(omega)};
     }
 
     @Override
     public void setOptimisable(double[] params) {
-        this.omega = params[0];
+        set(Math.exp(params[0]));
     }
 
     @Override
@@ -42,9 +46,7 @@ public class Omega extends Parameter {
 
     @Override
     public String toString() {
-        return "Omega{" +
-                "omega=" + omega +
-                '}';
+        return String.format("Omega{omega=%.7f}", omega);
     }
 
 

@@ -1,9 +1,8 @@
-package swmutsel;
+package swmutsel.model;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.math3.analysis.MultivariateFunction;
-import swmutsel.model.LikelihoodCalculator;
-import swmutsel.model.SubstitutionModel;
+import swmutsel.Constants;
 import swmutsel.model.parameters.Mapper;
 import swmutsel.model.parameters.Parameter;
 
@@ -13,17 +12,17 @@ import java.util.List;
  * Author: Asif Tamuri (tamuri@ebi.ac.uk)
  * Date: 31/10/2013 15:21
  */
-public class LikelihoodCalculatorFunction implements MultivariateFunction {
+public class SwMutSelFunction implements MultivariateFunction {
 
     private final LikelihoodCalculator calculator;
     private final List<SubstitutionModel> models;
     private final List<Parameter> parameters;
 
-    public LikelihoodCalculatorFunction(LikelihoodCalculator calculator, SubstitutionModel model) {
+    public SwMutSelFunction(LikelihoodCalculator calculator, SubstitutionModel model) {
         this(calculator, Lists.newArrayList(model));
     }
 
-    public LikelihoodCalculatorFunction(LikelihoodCalculator calculator, List<SubstitutionModel> models) {
+    public SwMutSelFunction(LikelihoodCalculator calculator, List<SubstitutionModel> models) {
         this.calculator = calculator;
         this.models = models;
 
@@ -41,6 +40,7 @@ public class LikelihoodCalculatorFunction implements MultivariateFunction {
     @Override
     public double value(double[] point) {
 
+        // todo: looks like we can ignore bounds when using lbfgs
         for (double d : point) {
             if (d < -(Constants.FITNESS_BOUND + 1) || d > (Constants.FITNESS_BOUND + 1)) {
                 return Constants.VERY_BAD_LIKELIHOOD;

@@ -1,6 +1,5 @@
 package swmutsel.trees;
 
-import com.beust.jcommander.internal.Lists;
 import pal.tree.Node;
 import pal.tree.Tree;
 import pal.tree.TreeManipulator;
@@ -8,57 +7,46 @@ import pal.tree.TreeUtils;
 import swmutsel.utils.PhyloUtils;
 
 import java.util.Iterator;
-import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Takes a standard rooted/unrooted tree and handles the iteration over all the possible internal-node-rooted trees.
- * Importantly, it saves the original rooted (by saving an outgroup) and restores it after iteration. This keeps
+ * Importantly, it saves the original rooted (by saving an out-group) and restores it after iteration. This keeps
  * any new branch lengths if they've been updated outside this class.
  */
 public class RerootedTreeIterator implements Iterable<Tree> {
-    private Tree tree;
-    private List<Node> internalNodes = Lists.newArrayList();
-    private List<String> outgroups = Lists.newArrayList();
+    private static final int ROOTED_DEGREE = 2;
+
+    private final Tree tree;
+    private final Node[] internalNodes;
+    private final TreeRootSaver treeRootSaver;
 
     public RerootedTreeIterator(Tree t) {
-        // Save the outgroup taxa from one child off the root node, so we can restore it once we're done
-        if (t.getRoot().getChildCount() == 2) {
-            findOutgroups(t.getRoot().getChild(0));
-            //System.out.printf("Outgroup(s): %s\n\n", outgroups.toString());
+        treeRootSaver = new TreeRootSaver(t);
+
+        if (t.getExternalNodeCount() == t.getRoot().getChildCount()) {
+            this.tree = t;
+            System.out.println(this.tree.toString());
+        }
+
+        else if (t.getRoot().getChildCount() == ROOTED_DEGREE) {
+            this.tree = TreeManipulator.getUnrooted(t);
+
         } else {
-            //System.out.println("Root is trifurcation - no defined outgroup.");
+            this.tree = t;
         }
 
-        // Unroot the tree - this is what we'll work with
-        this.tree = TreeManipulator.getUnrooted(t);
+        internalNodes = new Node[this.tree.getInternalNodeCount()];
 
-        // Keep a list of all the internal nodes of the unrooted tree
-        for (Node node : PhyloUtils.internalNodes(tree)) this.internalNodes.add(node);
-    }
-
-    /**
-     * Descends the tree looking for a leaf nodes, and saves those to the outgroups list
-     */
-    public void findOutgroups(Node node) {
-        if (node.isLeaf()) {
-            outgroups.add(node.getIdentifier().getName());
-        }
-
-        for (int i = 0; i < node.getChildCount(); i++) {
-            findOutgroups(node.getChild(i));
+        // Keep a list of all the internal nodes of the tree for iterator
+        int pos = 0;
+        for (Node node : PhyloUtils.internalNodes(this.tree)) {
+            internalNodes[pos++] = node;
         }
     }
 
-    /**
-     * If we have an outgroup, returns the tree with the original rooting.
-     */
     public Tree getOriginalRooting() {
-        if (outgroups.size() > 0) {
-            String[] outs = outgroups.toArray(new String[outgroups.size()]);
-            return TreeManipulator.getRootedBy(tree, outs);
-        } else {
-            return tree;
-        }
+        return treeRootSaver.getOriginalRooting(this.tree);
     }
 
     @Override
@@ -68,12 +56,15 @@ public class RerootedTreeIterator implements Iterable<Tree> {
 
             @Override
             public boolean hasNext() {
-                return position < internalNodes.size();
+                return position < internalNodes.length;
             }
 
             @Override
             public Tree next() {
-                TreeUtils.reroot(tree, internalNodes.get(position));
+                if(position > internalNodes.length - 1)
+                    throw new NoSuchElementException();
+
+                TreeUtils.reroot(tree, internalNodes[position]);
                 position++;
                 return tree;
             }

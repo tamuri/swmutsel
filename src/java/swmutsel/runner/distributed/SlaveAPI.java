@@ -1,13 +1,15 @@
 package swmutsel.runner.distributed;
 
 import pal.tree.Tree;
-import swmutsel.model.parameters.FitnessStore;
 import swmutsel.model.Penalty;
+import swmutsel.model.SubstitutionModel;
 import swmutsel.model.SwMut;
+import swmutsel.model.parameters.FitnessStore;
 import swmutsel.utils.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Author: Asif Tamuri (tamuri@ebi.ac.uk)
@@ -39,4 +41,8 @@ public interface SlaveAPI {
     public Map<Integer,Double> getLogLikelihoodForTree(Tree tree, boolean save);
 
     public Map<Integer,Double> getLogLikelihoodForMutation(SwMut mutation, boolean save);
+
+    public Map<Integer,Double> getLogLikelihoodForSubsmodel(SubstitutionModel model, boolean save);
+
+    public double updateTree(Tree t, Map<Integer, Integer> first, Set<Integer> second);
 }

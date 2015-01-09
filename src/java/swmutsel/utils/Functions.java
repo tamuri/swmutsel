@@ -9,6 +9,7 @@ public class Functions {
     public static Function<String, Double> stringToDouble() {
         return new Function<String, Double>() {
             public Double apply(String s) {
+                if (s == null) return null;
                 return Double.parseDouble(s);
             }
         };
@@ -17,6 +18,7 @@ public class Functions {
     public static Function<String, Integer> stringToInt() {
         return new Function<String, Integer>() {
             public Integer apply(String s) {
+                if (s == null) return null;
                 return Integer.parseInt(s);
             }
         };
@@ -26,6 +28,7 @@ public class Functions {
         return new Function<Integer, String>() {
             @Override
             public String apply(Integer integer) {
+                if (integer == null) return null;
                 return GeneticCode.getInstance().getCodonTLA(integer);
             }
         };
