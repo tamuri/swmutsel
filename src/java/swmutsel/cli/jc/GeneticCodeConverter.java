@@ -17,6 +17,8 @@ public class GeneticCodeConverter implements IStringConverter<GeneticCode> {
             GeneticCode.setCode(GeneticCode.STANDARD_CODE);
         } else if ("plastid".equals(value)) {
             GeneticCode.setCode(GeneticCode.PLASTID_CODE);
+        } else if ("pseudogene".equals(value)) {
+            GeneticCode.setCode(GeneticCode.PSEUDOGENE_CODE);
         } else {
             throw new RuntimeException("Unknown genetic code table '" + value + "'. Valid tables are 'standard', 'vertebrate_mit' and 'plastid'.\n");
         }

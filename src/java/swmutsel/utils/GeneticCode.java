@@ -31,6 +31,7 @@ public final class GeneticCode {
     public static final String STANDARD_CODE = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
     public static final String VERTEBRATE_MITOCHONDRIAL_CODE = "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG";
     public static final String PLASTID_CODE = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
+    public static final String PSEUDOGENE_CODE = "FFLLSSSSYYFFCCFWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
 
     public static final int CODON_STATES = 64;
     public static final int AMINO_ACID_STATES = 20;
@@ -97,6 +98,8 @@ public final class GeneticCode {
             return "vertebrate_mit";
         } else if (s.equals(PLASTID_CODE)) {
             return "plastid";
+        } else if (s.equals(PSEUDOGENE_CODE)) {
+            return "pseudogene";
         } else {
             throw new RuntimeException("GeneticCode.getCurrentCodeName - ERROR: Unknown code!!");
         }
