@@ -1,9 +1,10 @@
 
 This is swMutSel, a program to estimate fitnesses of amino acids in protein-
-coding genes using the evolution model of Halpern and Bruno (1998) and Tamuri et
-al. (2012, 2014). The program takes as input an alignment of protein-coding
-gene sequences and a phylogeny (tree) of the sequences, and outputs the
-fitnesses of each amino acid at each location in the protein-coding gene.
+coding genes using the codon substitution model of Halpern and Bruno (1998),
+Tamuri et al. (2012, 2014), and Tamuri and dos Reis (2022). The program takes as
+input an alignment of protein-coding gene sequences and a phylogeny (tree) of
+the sequences, and outputs the fitnesses of each amino acid at each location in
+the protein-coding gene.
 
 
 SYNOPSIS
@@ -178,6 +179,9 @@ USAGE
 
           java -jar swmutsel.jar @test_CHKPNT_9.txt -n test_restart
 
+       To use the new persistent positive selection model (Tamuri and dos Reis,
+       2022), use the -fds flag.
+
 CITATION
 
        Halpern AL and Bruno WJ. (1998) Evolutionary distances for protein-coding
@@ -192,4 +196,6 @@ CITATION
        for estimating the distribution of selection coefficients from
        phylogenetic data. Genetics, 197: 257-271.
 
-
+       Tamuri AU and dos Reis M. (2022) A mutation-selection model of protein
+       evolution under persistent positive selection. Molecular Biology and
+       Evolution, 39: msab309.
