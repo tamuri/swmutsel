@@ -1,9 +1,14 @@
 package swmutsel.model;
 
+import cern.colt.matrix.DoubleFactory2D;
+import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.linalg.Algebra;
+import cern.colt.matrix.linalg.EigenvalueDecomposition;
 import com.google.common.primitives.Ints;
 import swmutsel.Constants;
 import swmutsel.model.parameters.Fitness;
+import swmutsel.model.parameters.FitnessFDS;
 import swmutsel.utils.GeneticCode;
 import swmutsel.utils.Pair;
 
@@ -17,29 +22,54 @@ final public class SwMutSel extends SubstitutionModel {
     private static final long serialVersionUID = 3332802987971499184L;
     private final SwMut mutation;
     private final Fitness fitness;
+    private final boolean hasFitnessFDS;
+    private final FitnessFDS fitnessFDS;
 
     private final int[] senseCodons;
     private final int numSenseCodons;
+
+    private final DoubleMatrix2D Bcodon;
+    private final DoubleMatrix2D tQ;
 
     private final double[] senseCodonFrequencies;
     private final double[] lambda;
     private final double[][] U;
     private final double[][] Uinv;
+    private double[] Q;
+
+    private final double[] outFrequencies = new double[GeneticCode.CODON_STATES];
 
     private volatile transient boolean changed = true;
     private volatile transient TransProbCalculator calculator;
 
     private double expectedSubstitutions;
-    private Pair<Double, Double> proportionsSynAndNonSyn;
 
     public SwMutSel(SwMut mutation, Fitness fitness) {
+        this(mutation, fitness, null);
+    }
+
+    public SwMutSel(SwMut mutation, Fitness fitness, FitnessFDS fitnessFDS) {
         this.mutation = mutation;
         this.fitness = fitness;
+
         super.clearParameters();
-        super.addParameters(fitness); // We're assuming mutation component is fixed here
+
+        if (fitnessFDS == null) {
+            this.hasFitnessFDS = false;
+            this.fitnessFDS = null;
+            super.addParameters(fitness);
+        } else {
+            this.hasFitnessFDS = true;
+            this.fitnessFDS = fitnessFDS;
+            super.addParameters(fitness, fitnessFDS);
+        }
+
+//        super.addParameters(fitness, fitnessFDS); // We're assuming mutation component is fixed here
 
         this.senseCodons = GeneticCode.getInstance().getSenseCodons();
         this.numSenseCodons = this.senseCodons.length;
+        this.Bcodon = DoubleFactory2D.dense.make(numSenseCodons, numSenseCodons);
+        this.tQ = DoubleFactory2D.dense.make(numSenseCodons, numSenseCodons);
 
         this.senseCodonFrequencies = new double[this.numSenseCodons];
         this.U = new double[this.numSenseCodons][this.numSenseCodons];
@@ -52,9 +82,60 @@ final public class SwMutSel extends SubstitutionModel {
 
     @Override
     final public void build() {
+        this.Q = makeQ();
         setSenseCodonFrequencies();
-        setEigenFactors(makeB(makeQ(), numSenseCodons, senseCodonFrequencies));
+        if (!hasFitnessFDS || fitnessFDS.getModel() == 2) {
+            setEigenFactors(makeB(this.Q, numSenseCodons, senseCodonFrequencies));
+        }
+        //setEigenFactorsQ(this.Q);
         changed = true;
+    }
+
+    private void getCallingMethodName() {
+
+        StackTraceElement[] f = Thread.currentThread().getStackTrace();
+        for (int i = 2; i < f.length; i++) {
+            if (i > 2) System.out.print("\t");
+            System.out.println(f[i].toString());
+        }
+
+    }
+
+    private void setEigenFactorsQ(double[] Q) {
+        DoubleMatrix2D qq = DoubleFactory2D.dense.make(Q, numSenseCodons);
+
+        for (int i = 0; i < numSenseCodons; i++) {
+            for (int j = 0; j < numSenseCodons; j++) {
+                qq.setQuick(i, j, Q[i * numSenseCodons + j]);
+            }
+        }
+
+        EigenvalueDecomposition eigen = new EigenvalueDecomposition(qq);
+
+
+//getCallingMethodName();
+//        System.exit(0);
+
+        DoubleMatrix1D I = eigen.getImagEigenvalues();
+        if (I.zSum() > 0) {
+            System.out.println(I.toString());
+            System.exit(1);
+        }
+
+        DoubleMatrix1D l = eigen.getRealEigenvalues();
+        for (int i = 0; i < numSenseCodons; i++) {
+            lambda[i] = l.get(i) * mutation.getBranchScaling().get();
+        }
+
+        DoubleMatrix2D evec = eigen.getV();
+        DoubleMatrix2D ievec = Algebra.DEFAULT.inverse(evec);
+
+        for (int i = 0; i < numSenseCodons; i++) {
+            for (int j = 0; j < numSenseCodons; j++) {
+                U[i][j] = evec.getQuick(i, j);
+                Uinv[i][j] = ievec.getQuick(i, j);
+            }
+        }
     }
 
     @Override
@@ -62,16 +143,33 @@ final public class SwMutSel extends SubstitutionModel {
         return true;
     }
 
-    private void setSenseCodonFrequencies() {
-        double z = 0;
-        for (int i = 0; i < numSenseCodons; i++) {
-            senseCodonFrequencies[i] = this.mutation.getCodonFrequency(senseCodons[i]) *
-                    Math.exp(fitness.get()[GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(senseCodons[i])]);
-            z += senseCodonFrequencies[i];
-        }
 
-        for (int i = 0; i < numSenseCodons; i++) {
-            senseCodonFrequencies[i] /= z;
+    private void setSenseCodonFrequencies() {
+        if (hasFitnessFDS && fitnessFDS.getModel() == 1) {
+            for (int i = 0; i < numSenseCodons; i++) {
+                for (int j = 0; j < numSenseCodons; j++) {
+                    tQ.set(i, j, Q[j * numSenseCodons + i]);
+                }
+            }
+            for (int i = 0; i < numSenseCodons; i++) {
+                tQ.setQuick(0, i, 1.0);
+            }
+            Bcodon.setQuick(0, 0, 1.0);
+            DoubleMatrix2D out = Algebra.DEFAULT.solve(tQ, Bcodon);
+            for (int i = 0; i < numSenseCodons; i++) {
+                senseCodonFrequencies[i] = out.getQuick(i, 0);
+            }
+        } else {
+            double z = 0;
+            for (int i = 0; i < numSenseCodons; i++) {
+                senseCodonFrequencies[i] = this.mutation.getCodonFrequency(senseCodons[i]) *
+                        Math.exp(fitness.get()[GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(senseCodons[i])]);
+                z += senseCodonFrequencies[i];
+            }
+
+            for (int i = 0; i < numSenseCodons; i++) {
+                senseCodonFrequencies[i] /= z;
+            }
         }
     }
 
@@ -85,10 +183,7 @@ final public class SwMutSel extends SubstitutionModel {
     private double[] makeQ() {
         double[] F = this.fitness.get();
         double[] Q = new double[numSenseCodons * numSenseCodons];
-
-        double expectedSubstitutions = 0;
-        double totalSynonymous = 0;
-        double totalNonSynonymous = 0;
+        // Q = new double[numSenseCodons * numSenseCodons];
 
         for (int i = 0; i < numSenseCodons; i++) {
             for (int j = 0; j < numSenseCodons; j++) {
@@ -105,20 +200,34 @@ final public class SwMutSel extends SubstitutionModel {
                 double Fi = F[Ai];
                 double Fj = F[Aj];
 
-                double hS = getRelativeFixationProbability(Fj - Fi);
+                double hS;
+                if (Ai == Aj) {
+                    hS = getRelativeFixationProbability(Fj - Fi);
+                } else {
+                    //hS = getRelativeFixationProbability(Fj - Fi + (hasFitnessFDS ? fitnessFDS.get() : 0));
+                    if (hasFitnessFDS) {
+                        if (fitnessFDS.getModel() == 1) {
+                            hS = getRelativeFixationProbability(Fj - Fi + fitnessFDS.get());
+                        } else if (fitnessFDS.getModel() == 2) {
+                            double Z = fitnessFDS.get();
+                            if (Z == 0) {
+                                hS = 1;
+                            } else {
+                                hS = Z / (1 - Math.exp(-Z));
+                            }
+                        } else {
+                            throw new RuntimeException("unknown FDS model");
+                        }
+                    } else {
+                        hS = getRelativeFixationProbability(Fj - Fi);
+                    }
+                }
 
                 Q[i * numSenseCodons + j] = mutationRate * hS;
 
-                double rate = senseCodonFrequencies[i] * Q[i * numSenseCodons + j];
-                if (Ai == Aj) {
-                    totalSynonymous += rate;
-                } else {
-                    totalNonSynonymous += rate;
-                }
             }
         }
 
-        this.proportionsSynAndNonSyn = Pair.of(totalNonSynonymous, totalSynonymous);
 
         // Each row sums to 0
         for (int row = 0; row < numSenseCodons; row++) {
@@ -127,20 +236,39 @@ final public class SwMutSel extends SubstitutionModel {
                 rowSum += Q[row * numSenseCodons + column];
             }
             Q[row * numSenseCodons + row] = -rowSum;
-            expectedSubstitutions += rowSum * senseCodonFrequencies[row];
         }
 
-        this.expectedSubstitutions = expectedSubstitutions;
 
         return Q;
     }
 
     public final double getExpectedSubsPerSite() {
+        double expectedSubstitutions = 0;
+        for (int i = 0; i < numSenseCodons; i++) {
+            expectedSubstitutions += -Q[i * numSenseCodons + i] * senseCodonFrequencies[i];
+        }
         return expectedSubstitutions;
     }
 
     public final Pair<Double, Double> getRhoNonSynAndSyn() {
-        return proportionsSynAndNonSyn;
+        double totalSynonymous = 0;
+        double totalNonSynonymous = 0;
+        for (int i = 0; i < numSenseCodons; i++) {
+            for (int j = 0; j < numSenseCodons; j++) {
+                if (i == j) {
+                    continue;
+                }
+                double rate = senseCodonFrequencies[i] * Q[i * numSenseCodons + j];
+                int Ai = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(senseCodons[i]);
+                int Aj = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(senseCodons[j]);
+                if (Ai == Aj) {
+                    totalSynonymous += rate;
+                } else {
+                    totalNonSynonymous += rate;
+                }
+            }
+        }
+        return Pair.of(totalNonSynonymous, totalSynonymous);
     }
 
     public final double[] getFullQ() {
@@ -182,11 +310,11 @@ final public class SwMutSel extends SubstitutionModel {
     @Override
     public final double[] getCodonFrequencies() {
         // return frequencies for all 64 codons - compare to setSenseCodonFrequencies()
-        double[] frequencies = new double[GeneticCode.CODON_STATES];
+        // double[] frequencies = new double[GeneticCode.CODON_STATES];
         for (int i = 0; i < numSenseCodons; i++) {
-            frequencies[senseCodons[i]] = senseCodonFrequencies[i];
+            outFrequencies[senseCodons[i]] = senseCodonFrequencies[i];
         }
-        return frequencies;
+        return outFrequencies;
     }
 
     @Override
@@ -194,12 +322,50 @@ final public class SwMutSel extends SubstitutionModel {
         if (changed || calculator == null) {
             synchronized (this) {
                 if (changed || calculator == null) {
-                    this.calculator = TransProbCalcFactory.getPtCalculator(lambda, U, Uinv, senseCodons, false);
+                    if (hasFitnessFDS && fitnessFDS.getModel() == 1) {
+                        this.calculator = TransProbCalcFactory.getPadeCalculator(Q, senseCodons, mutation.getBranchScaling().get());
+                    } else {
+                        this.calculator = TransProbCalcFactory.getDecompositionCalculator(lambda, U, Uinv, senseCodons, false);
+                    }
                     changed = false;
                 }
             }
         }
         return this.calculator;
+    }
+
+    public boolean hasFitnessFDS() {
+        return hasFitnessFDS;
+    }
+
+    private boolean doPenalty = false;
+
+    public void setDoPenalty(boolean doPenalty) {
+        this.doPenalty = doPenalty;
+    }
+
+    public void setPenaltyShape(double alpha, double beta) {
+        this.alpha = alpha;
+        this.beta = beta;
+    }
+
+    private double alpha = 1.0;
+    private double beta = 1.0;
+
+    public double getFDSPenalty() {
+        if (doPenalty) {
+            double parameter = fitnessFDS.get();
+            if (fitnessFDS.getModel() == 1) {
+                // return Math.log(Math.pow(parameter, alpha - 1) * Math.exp(-beta * parameter));
+                return -beta * parameter;
+            } else if (fitnessFDS.getModel() == 2) {
+                double theta = Math.exp(parameter) / (1 + Math.exp(parameter));
+                return Math.log(Math.pow(theta, 0.01 - 1.0) * Math.pow(1 - theta, 0.01 - 1.0));
+            }
+            return 0;
+        } else {
+            return 0;
+        }
     }
 
 }

@@ -62,14 +62,14 @@ public class FMutSelHandler implements Handler {
 
         }
 
-        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
+        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
         PointValuePair lastOptima;
         PointValuePair thisOptima = new PointValuePair(null, Double.NEGATIVE_INFINITY);
         int iteration = 0;
         boolean converged = false;
         double iterationLnL = Double.NEGATIVE_INFINITY;
 
-        Constants.CONVERGENCE_TOL = 5.0;
+        Constants.VALUE_CONVERGENCE_TOL = 5.0;
 
         CoreUtils.msg("Initial model parameters:\n");
         CoreUtils.msg(model.toString() + "\n");
@@ -79,7 +79,7 @@ public class FMutSelHandler implements Handler {
         while (!converged) {
             iteration++;
 
-            CoreUtils.msg("Round %d (tol = %.7f)\n", iteration, Constants.CONVERGENCE_TOL);
+            CoreUtils.msg("Round %d (tol = %.7f)\n", iteration, Constants.VALUE_CONVERGENCE_TOL);
 
             // Optimise branch lengths
             CoreUtils.msg("%da - Optimising branch lengths: ", iteration);
@@ -121,10 +121,10 @@ public class FMutSelHandler implements Handler {
                 ArgumentWriter.saveStringToFile(args.getCheckpointString() + iterationLnL + "\n", out);
             }
 
-            Constants.CONVERGENCE_TOL /= 2;
+            Constants.VALUE_CONVERGENCE_TOL /= 2;
 
-            if (Constants.CONVERGENCE_TOL < Constants.MINIMUM_TOL){
-                Constants.CONVERGENCE_TOL = Constants.MINIMUM_TOL;
+            if (Constants.VALUE_CONVERGENCE_TOL < Constants.MINIMUM_TOL){
+                Constants.VALUE_CONVERGENCE_TOL = Constants.MINIMUM_TOL;
             }
         }
 

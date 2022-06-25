@@ -33,6 +33,9 @@ public class SharedArguments extends Arguments {
     @Parameter(names = "-fmutsel0", required = false)
     public boolean fmutsel0 = false;
 
+    @Parameter(names = "-fds", required = false)
+    public boolean fdr = false;
+
     @Override
     public void initialise() {
         throw new RuntimeException("Not implemented.");

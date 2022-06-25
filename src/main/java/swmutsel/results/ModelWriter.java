@@ -12,6 +12,7 @@ import swmutsel.Constants;
 import swmutsel.model.SwMut;
 import swmutsel.model.SwMutSel;
 import swmutsel.model.parameters.Fitness;
+import swmutsel.model.parameters.FitnessFDS;
 import swmutsel.utils.Functions;
 import swmutsel.utils.GeneticCode;
 import swmutsel.utils.PhyloUtils;
@@ -102,11 +103,31 @@ public class ModelWriter {
 
             List<Double> fitnesses = Lists.transform(Arrays.asList(line.split(" ")), Functions.stringToDouble());
 
-            Fitness f = new Fitness(Doubles.toArray(fitnesses));
-            SwMutSel model = new SwMutSel(mutation, f);
+            SwMutSel model;
+            double[] S;
+
+            if (fitnesses.size() == 20) {
+                Fitness f = new Fitness(Doubles.toArray(fitnesses));
+                model = new SwMutSel(mutation, f);
+                S = getS(f);
+            } else if (fitnesses.size() == 21) {
+                // 20 fitnesses and one Z parameter
+
+                double[] fitness = new double[20];
+                for (int i = 0; i < 20; i++) {
+                    fitness[i] = fitnesses.get(i);
+                }
+
+                Fitness f = new Fitness(fitness);
+                FitnessFDS fds = new FitnessFDS(fitnesses.get(20), 1);
+                model = new SwMutSel(mutation, f, fds);
+                S = getS(f, fds);
+            } else {
+                throw new RuntimeException("Line has " + fitnesses.size() + " numbers?");
+            }
+
             model.build();
 
-            double[] S = getS(f);
             double[] QS = model.getFullQ();
             double[] PiS = model.getCodonFrequencies();
 
@@ -118,14 +139,12 @@ public class ModelWriter {
             return true;
         }
 
-
-
         @Override
         public Object getResult() {
             return null;
         }
 
-        public double[] getS(Fitness f) {
+        private double[] getS(Fitness f) {
             double[] fullS = new double[GeneticCode.CODON_STATES * GeneticCode.CODON_STATES];
 
             for (int i = 0; i < GeneticCode.CODON_STATES; i++) {
@@ -150,6 +169,33 @@ public class ModelWriter {
             }
             return fullS;
         }
+
+        private double[] getS(Fitness fitness, FitnessFDS fds) {
+            double[] fullS = new double[GeneticCode.CODON_STATES * GeneticCode.CODON_STATES];
+
+            for (int i = 0; i < GeneticCode.CODON_STATES; i++) {
+                for (int j = 0; j < GeneticCode.CODON_STATES; j++) {
+                    if (i == j) {
+                        fullS[i * GeneticCode.CODON_STATES + j] = 0;
+                    } else {
+                        int aa_from = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(i);
+                        int aa_to = GeneticCode.getInstance().getAminoAcidIndexFromCodonIndex(j);
+                        if (aa_to < 0) {
+                            // going to STOP codon
+                            fullS[i * GeneticCode.CODON_STATES + j] = -Constants.FITNESS_BOUND;
+                        } else if (aa_from < 0) {
+                            // going from a STOP codon to any non-STOP codon
+                            fullS[i * GeneticCode.CODON_STATES + j] = Constants.FITNESS_BOUND;
+                        } else {
+                            // both amino acids that occur at this site
+                            fullS[i * GeneticCode.CODON_STATES + j] = fitness.get()[aa_to] - fitness.get()[aa_from] + fds.get();
+                        }
+                    }
+                }
+            }
+            return fullS;
+        }
+
     }
 
 

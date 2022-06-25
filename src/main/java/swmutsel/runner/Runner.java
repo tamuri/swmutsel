@@ -156,9 +156,9 @@ public abstract class Runner {
     private Pair<Double, Tree> optimiseBranchLengths(final Tree tree, final BLOptCallback blSetup) {
         double postOptima = Double.NEGATIVE_INFINITY, preOptima = Double.NEGATIVE_INFINITY;
 
-        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
+        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
         //ConvergenceChecker<UnivariatePointValuePair> branchConvergenceChecker = new SimpleUnivariateValueChecker(-1, Constants.MIN_BRANCH_LENGTH);
-        ConvergenceChecker<UnivariatePointValuePair> branchConvergenceChecker = new SimpleUnivariateValueChecker(-1, Constants.CONVERGENCE_TOL);
+        ConvergenceChecker<UnivariatePointValuePair> branchConvergenceChecker = new SimpleUnivariateValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
 
         int iteration = 0;
 
@@ -211,7 +211,7 @@ public abstract class Runner {
                         double old = child.getBranchLength();
 
                         UnivariateOptimizer opt;
-                        if (Constants.CONVERGENCE_TOL > 5e-6) {
+                        if (Constants.VALUE_CONVERGENCE_TOL > 5e-6) {
                             opt = new BrentOptimizer(Constants.MIN_BRANCH_LENGTH, Constants.MIN_BRANCH_LENGTH, branchConvergenceChecker);
                         } else {
                             opt = new BrentOptimizer(Constants.BRENT_REL, Constants.BRENT_ABS, branchConvergenceChecker);
@@ -326,7 +326,7 @@ public abstract class Runner {
 
         SubstitutionModelFunction function = new SubstitutionModelFunction(model, this);
 
-        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
+        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
 
         //int n = initialGuess.length;
         //MultivariateOptimizer optimiser = new BOBYQAOptimizer(2 * n + 1);
@@ -376,7 +376,7 @@ public abstract class Runner {
 
         SwMutFunction function = new SwMutFunction(mutation, this);
 
-        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
+        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
 
         //int n = initialGuess.length;
         //MultivariateOptimizer optimiser = new BOBYQAOptimizer(2 * n + 1);

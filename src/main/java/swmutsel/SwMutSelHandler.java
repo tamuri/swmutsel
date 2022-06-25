@@ -75,7 +75,7 @@ public class SwMutSelHandler implements Handler {
 
         Map<Integer, Double> siteLogLikelihood = Maps.newHashMap();
 
-        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
+        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
         PointValuePair lastOptima;
         PointValuePair thisOptima = new PointValuePair(null, Double.NEGATIVE_INFINITY);
         int iteration = 0;
@@ -237,6 +237,7 @@ public class SwMutSelHandler implements Handler {
 
         Map<Integer, Double> siteLogLikelihood = runner.getLogLikelihood(args.tree, mutation, args.fitnesses, args.penalty);
         Map<Integer, Pair<Double, Double>> siteDnDs = runner.getDnDs(mutation, args.fitnesses);
+
         ArgumentWriter.writeSiteInformation(args, siteLogLikelihood, siteDnDs, file);
 
         double sum = CoreUtils.sum(siteLogLikelihood.values());

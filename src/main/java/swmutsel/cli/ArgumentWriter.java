@@ -69,16 +69,14 @@ public class ArgumentWriter {
             writer.write("site\tlnL\trel_w\trel_g");
             writer.newLine();
 
-            List<Integer> sites = Lists.newArrayList(args.patternSiteMap.keySet());
+            List<Integer> sites = Lists.newArrayList(siteLogLikelihood.keySet());
             Collections.sort(sites);
 
             for (int site : sites) {
-                if (siteLogLikelihood.containsKey(site)) {
-                    double logLikelihood = siteLogLikelihood.get(args.patternSiteMap.get(site));
-                    Pair<Double, Double> dnDs = siteDnDs.get(args.patternSiteMap.get(site));
-                    writer.write(String.format("%s\t%.7f\t%.7f\t%.7f", site, logLikelihood, dnDs.first, dnDs.second));
-                    writer.newLine();
-                }
+                double logLikelihood = siteLogLikelihood.get(args.patternSiteMap.get(site));
+                Pair<Double, Double> dnDs = siteDnDs.get(args.patternSiteMap.get(site));
+                writer.write(String.format("%s\t%.7f\t%.7f\t%.7f", site, logLikelihood, dnDs.first, dnDs.second));
+                writer.newLine();
             }
 
             writer.newLine();

@@ -213,7 +213,7 @@ public class CoreUtils {
     }
 
     public static String getMinSecString(long millis) {
-        return String.format("%01d:%02d",
+        return String.format("%01dm%02ds",
                 TimeUnit.MILLISECONDS.toMinutes(millis),
                 TimeUnit.MILLISECONDS.toSeconds(millis) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))

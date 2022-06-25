@@ -5,6 +5,7 @@ package swmutsel.model;
  * Date: 14/03/2014 04:50
  */
 public interface TransProbCalculator {
-    public void getTransitionProbabilities(final double[][] Pt, final double branchLength);
-    public void calculatePartialLikelihood(final double[] Ldown, final double[] Lup, double t);
+    void getTransitionProbabilities(final double[][] Pt, final double branchLength);
+    void calculatePartialLikelihood(final double[] Ldown, final double[] Lup, double t);
+    void calculatePartialLikelihoodPair(final double[] parent, final double[] leftChild, final double leftLength, final double[] rightChild, double rightLength, double[] pTemp, double[] qTemp);
 }

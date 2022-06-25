@@ -288,97 +288,83 @@ public class MultiThreadedRunner extends Runner {
                 new ExecutorCompletionService<Triple<Integer, Double, ArrayList<Fitness>>>(threadPool);
 
         for (final Map.Entry<Integer, Map<String, Byte>> site : getSites().columnMap().entrySet() ) {
-            Future<Triple<Integer, Double, ArrayList<Fitness>>> future = completionService.submit(new Callable<Triple<Integer, Double, ArrayList<Fitness>>>() {
-                @Override
-                public Triple<Integer, Double, ArrayList<Fitness>> call() throws Exception {
-                    // We allow for multiple attempts to optimise fitness
-                    List<Pair<Double, ArrayList<Fitness>>> optimals = Lists.newArrayList();
+            Future<Triple<Integer, Double, ArrayList<Fitness>>> future = completionService.submit(() -> {
+                // We allow for multiple attempts to optimise fitness
+                List<Pair<Double, ArrayList<Fitness>>> optimals = Lists.newArrayList();
 
-                    for (int run = 0; run < numberOfOptimRestarts; run++) {
-                        ArrayList<Fitness> siteFitness = Lists.newArrayList();
-                        LinkedHashMap<String, SubstitutionModel> models = Maps.newLinkedHashMap();
+                for (int run = 0; run < numberOfOptimRestarts; run++) {
+                    ArrayList<Fitness> siteFitness = Lists.newArrayList();
+                    LinkedHashMap<String, SubstitutionModel> models = Maps.newLinkedHashMap();
 
-                        for (String clade : cladeModel) {
-                            Fitness f = fitnesses.get(site.getKey()).copy();
+                    for (String clade : cladeModel) {
+                        Fitness f = fitnesses.get(site.getKey()).copy();
 
-                            // If we're anything but the very first optimisation attempt
-                            if (run > 0) {
-                                // starting fitnesses are drawn from a uniform distribution
-                                double[] randf = new double[19];
-                                for (int j = 0; j < randf.length; j++)
-                                    randf[j] = randomData.nextUniform(-Constants.RANDOM_INITIAL_FITNESS_RANGE, Constants.RANDOM_INITIAL_FITNESS_RANGE);
-                                f.setOptimisable(randf);
-                            }
-
-                            siteFitness.add(f);
-                            models.put(clade, new SwMutSel(mutation, f));
+                        // If we're anything but the very first optimisation attempt
+                        if (run > 0) {
+                            // starting fitnesses are drawn from a uniform distribution
+                            double[] randf = new double[19];
+                            for (int j = 0; j < randf.length; j++)
+                                randf[j] = randomData.nextUniform(-Constants.RANDOM_INITIAL_FITNESS_RANGE, Constants.RANDOM_INITIAL_FITNESS_RANGE);
+                            f.setOptimisable(randf);
                         }
 
-                        Map<String, Byte> states = site.getValue();
-
-                        LikelihoodCalculator calculator;
-
-                        if (penalty == null) {
-                            calculator = new LikelihoodCalculator(tree, states, models);
-                        } else {
-                            if (cladeModel.size() == 1) {
-                                calculator = new PenalisedLikelihoodCalculator(tree, site.getValue(), models, penalty, siteFitness.get(0));
-                            } else {
-                                throw new RuntimeException("MultiThreadedRunner.optimiseFitness - Penalised likelihood not implemented for non-homogeneous models");
-                            }
-                        }
-
-                        calculator.getStorage();
-
-                        SwMutSelFunction function = new SwMutSelFunction(calculator, Lists.newArrayList(models.values()));
-
-                        // The default SimplexOptimiser does not pass the iterations to ConvergenceChecker - we need to keep track ourselves!
-                        ConvergenceChecker<PointValuePair> convergenceChecker = new ConvergenceChecker<PointValuePair>() {
-                            final ConvergenceChecker<PointValuePair> checker = new SimplePointChecker<PointValuePair>(-1, Constants.CONVERGENCE_TOL, Constants.MAX_ITERATIONS);
-                            int iteration = 0;
-
-                            @Override
-                            public boolean converged(int ignored, PointValuePair previous, PointValuePair current) {
-                                if (previous != current) iteration++;
-                                return checker.converged(iteration, previous, current);
-                            }
-                        };
-
-                        MultivariateOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
-
-                        //MultivariateOptimizer optimiser = new LBFGSMultivariateOptimizer(convergenceChecker);
-                        //MultivariateOptimizer optimiser = new NativeLBFGSBMultivariateOptimizer(convergenceChecker);
-
-                        double[] initialGuess = function.getCurrentParameters();
-
-                        PointValuePair optima;
-                        optima = optimiser.optimize(
-                                new ObjectiveFunction(function),
-                                GoalType.MAXIMIZE,
-                                new MaxEval(Constants.MAX_EVALUATIONS),
-                                new InitialGuess(initialGuess),
-                                new NelderMeadSimplex(initialGuess.length)
-                        );
-
-                        if (optimiser.getIterations() >= Constants.MAX_ITERATIONS) {
-                            System.out.printf("[%d, %d, %d] ", site.getKey(), optimiser.getEvaluations(), optimiser.getIterations());
-                        }
-
-                        if (optima == null) return null; // ERROR!!
-
-                        function.value(optima.getPoint());
-
-                        calculator.releaseStorage();
-
-                        optimals.add(Pair.of(optima.getValue(), siteFitness));
+                        siteFitness.add(f);
+                        models.put(clade, new SwMutSel(mutation, f));
                     }
 
-                    int best = 0;
-                    for (int i = 1; i < optimals.size(); i++)
-                        if (optimals.get(i).first > optimals.get(best).first) best = i;
+                    Map<String, Byte> states = site.getValue();
 
-                    return Triple.of(site.getKey(), optimals.get(best).first, optimals.get(best).second);
+                    LikelihoodCalculator calculator;
+
+                    if (penalty == null) {
+                        calculator = new LikelihoodCalculator(tree, states, models);
+                    } else {
+                        if (cladeModel.size() == 1) {
+                            calculator = new PenalisedLikelihoodCalculator(tree, site.getValue(), models, penalty, siteFitness.get(0));
+                        } else {
+                            throw new RuntimeException("MultiThreadedRunner.optimiseFitness - Penalised likelihood not implemented for non-homogeneous models");
+                        }
+                    }
+
+                    calculator.getStorage();
+
+                    SwMutSelFunction function = new SwMutSelFunction(calculator, Lists.newArrayList(models.values()));
+                    ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL);
+                    MultivariateOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
+
+                    //MultivariateOptimizer optimiser = new LBFGSMultivariateOptimizer(convergenceChecker);
+                    //MultivariateOptimizer optimiser = new NativeLBFGSBMultivariateOptimizer(convergenceChecker);
+
+                    double[] initialGuess = function.getCurrentParameters();
+
+                    PointValuePair optima;
+                    optima = optimiser.optimize(
+                            new ObjectiveFunction(function),
+                            GoalType.MAXIMIZE,
+                            new MaxEval(Constants.MAX_EVALUATIONS),
+                            new MaxIter(Constants.MAX_ITERATIONS),
+                            new InitialGuess(initialGuess),
+                            new NelderMeadSimplex(initialGuess.length)
+                    );
+
+                    if (optimiser.getIterations() >= Constants.MAX_ITERATIONS) {
+                        System.out.printf("[%d, %d, %d] ", site.getKey(), optimiser.getEvaluations(), optimiser.getIterations());
+                    }
+
+                    if (optima == null) return null; // ERROR!!
+
+                    function.value(optima.getPoint());
+
+                    calculator.releaseStorage();
+
+                    optimals.add(Pair.of(optima.getValue(), siteFitness));
                 }
+
+                int best = 0;
+                for (int i = 1; i < optimals.size(); i++)
+                    if (optimals.get(i).first > optimals.get(best).first) best = i;
+
+                return Triple.of(site.getKey(), optimals.get(best).first, optimals.get(best).second);
             });
             futures.add(future);
         }

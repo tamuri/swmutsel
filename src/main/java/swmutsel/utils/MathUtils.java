@@ -1,8 +1,16 @@
 package swmutsel.utils;
 
 import cern.colt.matrix.DoubleMatrix2D;
+import com.google.common.primitives.Doubles;
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import pal.math.MachineAccuracy;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 /**
  * Author: Asif Tamuri (tamuri@ebi.ac.uk)
@@ -42,6 +50,81 @@ public class MathUtils {
             sum = sumLogs(sum, a[i]);
         }
         return sum;
+    }
+
+    public static double[] smartRound(double[] in, int digits) {
+        /* Based on the following R code, courtesy of Mikhail at http://stackoverflow.com/a/35930285
+        smart.round <- function(x, digits = 0) {
+          up <- 10 ^ digits
+          x <- x * up
+          y <- floor(x)
+          indices <- tail(order(x-y), round(sum(x)) - sum(y))
+          y[indices] <- y[indices] + 1
+          y / up
+        }
+        */
+
+        double up = Math.pow(10, digits);
+
+        double[] x = new double[in.length];
+        double[] y = new double[in.length];
+        double[] decimals = new double[in.length];
+        double xSum = 0;
+        double ySum = 0;
+
+        for (int i = 0; i < in.length; i++) {
+            x[i] = in[i] * up;
+            y[i] = Math.floor(x[i]);
+            decimals[i] = x[i] - y[i];
+            xSum += x[i];
+            ySum += y[i];
+        }
+
+        int[] sortedIndices = IntStream.range(0, y.length).boxed().sorted(Comparator.comparingDouble(i -> decimals[i])).mapToInt(i -> i).toArray();
+        int places = (int) Math.round(xSum - ySum);
+
+        for (int j = y.length - places; j < y.length; j++) {
+            int i = sortedIndices[j];
+            y[i] = y[i] + 1;
+        }
+
+        for (int i = 0; i < y.length; i++) {
+            y[i] = y[i] / up;
+        }
+
+        return y;
+    }
+
+    private static void test_smartRound() {
+        // Sum using the exact values
+        // double[] x = new double[]{0.13626332, 0.47989636, 0.09596008, 0.28788024};
+        double[] x = new double[]{0.1913489,0.6738984,0.1347527};
+        System.out.println(Doubles.join(", ", x));
+        System.out.println(Arrays.stream(x).sum());
+        System.out.println();
+
+        // Standard rounds to 4 decimal places, and sum
+        double[] xx = Arrays.stream(x).map(i -> round(i, 2)).toArray();
+        System.out.println(Doubles.join(", ", xx));
+        System.out.println(Arrays.stream(xx).sum());
+        System.out.println();
+
+        // Smart rounding procedure
+        double[] y = smartRound(x, 2);
+        System.out.println(Doubles.join(", ", y));
+        System.out.println(Arrays.stream(y).sum());
+    }
+
+    public static void main(String[] args) {
+        test_smartRound();
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_EVEN);
+        return bd.doubleValue();
     }
 
     /**

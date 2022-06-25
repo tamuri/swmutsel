@@ -23,7 +23,7 @@ public class PenaltyConverter implements IStringConverter<Penalty> {
             throw new ParameterException("Could not create penalty '" + s + "'.\n");
         }
 
-        CoreUtils.msg("Using penalty %s.\n", p.toString());
+        CoreUtils.msg("Using penalty %s on fitness parameters F\n", p.toString());
         return p;
     }
 }

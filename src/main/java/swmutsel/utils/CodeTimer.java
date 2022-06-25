@@ -27,7 +27,7 @@ public class CodeTimer {
     }
 
     public static void printAll() {
-        System.out.println("\n-------------------\nswmutsel.utils.CodeTimer\n-------------------");
+        System.out.println("\n------------------------\nswmutsel.utils.CodeTimer\n------------------------");
         for (Map.Entry e : times.entrySet()) {
             System.out.printf("%s = %sms\n", e.getKey(), e.getValue());
         }

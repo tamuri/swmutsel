@@ -70,7 +70,8 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
     public void build() {
         setSenseCodonFrequencies();
         setEigenFactors(makeB(makeQ(), numSenseCodons, senseCodonFrequencies));
-        this.calculator = TransProbCalcFactory.getPtCalculator(lambda, U, UInv, senseCodons, true);
+        // this.calculator = TransProbCalcFactory.getDecompositionCalculator(lambda, U, UInv, senseCodons, true);
+        this.calculator = TransProbCalcFactory.getDecompositionCalculator(lambda, U, UInv, senseCodons, false);
     }
 
     @Override
@@ -88,7 +89,7 @@ public class FMutSel0 extends SubstitutionModel implements Serializable {
         /*if (changed || calculator == null) {
             synchronized (this) {
                 if (changed || calculator == null) {
-                    this.calculator = TransProbCalcFactory.getPtCalculator(lambda, U, UInv, senseCodons, true);
+                    this.calculator = TransProbCalcFactory.getDecompositionCalculator(lambda, U, UInv, senseCodons, true);
                     changed = false;
                 }
             }

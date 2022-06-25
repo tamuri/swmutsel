@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.util.Arrays;
 
 /**
  * Given the model files produced by ModelWriter (S.txt etc.), this parses those files and produced the distribution
@@ -72,7 +73,9 @@ public class DistributionWriter {
         double mutsAllDenom = 0, mutsNonSynDenom = 0, subsAllDenom = 0, subsNonSynDenom = 0;
 
         String SLine;
+        int site = 0;
         while ((SLine = SReader.readLine()) != null) {
+            site++;
             String QSLine = QSReader.readLine();
             String PiLine = PiReader.readLine();
 
@@ -101,20 +104,21 @@ public class DistributionWriter {
                 int mutsBin = (int) (MUTS_BINS * (val / (HI - LOW))); // this just drops any decimal places i.e. (int) Math.floor(double)
                 int subsBin = (int) (SUBS_BINS * (val / (HI - LOW))); // perhaps it should be (int) Math.round(SUBS_BIN * ... - LOW) etc.
 
-                if (isNonSynChange) {
-                    mutsNonSynSiteSum += piValue * Q0[i];
-                    subsNonSynSiteSum += piValue * qValue;
+                double mutRate = piValue * Q0[i];
+                double subRate = piValue * qValue;
 
-                    mutsNonSyn[mutsBin] += piValue * Q0[i];
-                    subsNonSyn[subsBin] += piValue * qValue;
+                if (isNonSynChange) {
+                    mutsNonSynSiteSum += mutRate;
+                    subsNonSynSiteSum += subRate;
+                    mutsNonSyn[mutsBin] += mutRate;
+                    subsNonSyn[subsBin] += subRate;
                 }
 
                 if (isCodonChange) {
-                    mutsAllSiteSum += piValue * Q0[i];
-                    subsAllSiteSum += piValue * qValue;
-
-                    mutsAll[mutsBin] += piValue * Q0[i];
-                    subsAll[subsBin] += piValue * qValue;
+                    mutsAllSiteSum += mutRate;
+                    subsAllSiteSum += subRate;
+                    mutsAll[mutsBin] += mutRate;
+                    subsAll[subsBin] += subRate;
                 }
             }
 
@@ -122,7 +126,21 @@ public class DistributionWriter {
             mutsNonSynDenom += mutsNonSynSiteSum;
             subsAllDenom += subsAllSiteSum;
             subsNonSynDenom += subsNonSynSiteSum;
+
+            double[] sPi = Arrays.stream(PiParts).mapToDouble(Double::parseDouble).toArray();
+            double[] S = Arrays.stream(SParts).mapToDouble(Double::parseDouble).toArray();
+            double meanS = 0;
+            for (int i = 0; i < GeneticCode.CODON_STATES; i++) {
+                for (int j = 0; j < GeneticCode.CODON_STATES; j++) {
+                    if (i==j) continue;
+                    meanS += sPi[i] * (Q0[i * GeneticCode.CODON_STATES + j] / -Q0[i * GeneticCode.CODON_STATES + i]) * S[i * GeneticCode.CODON_STATES + j];
+                }
+            }
+            System.out.printf("%d %.5f\n", site, meanS);
+
+
         }
+
 
         SReader.close();
         QSReader.close();

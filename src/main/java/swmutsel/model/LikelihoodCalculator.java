@@ -190,7 +190,16 @@ public class LikelihoodCalculator {
         double scaled = 0;
         for (double d : scaledPartial) scaled += Math.log(d);
 
-        return Math.log(sum) + scaled;
+        // TODO: hack - clean this up
+        double penalty = 0;
+        if (cladeModels.get(ROOT_MODEL_NAME) instanceof SwMutSel) {
+            SwMutSel model = (SwMutSel) cladeModels.get(ROOT_MODEL_NAME);
+            if (model.hasFitnessFDS()) {
+                penalty = model.getFDSPenalty();
+            }
+        }
+
+        return Math.log(sum) + scaled + penalty;
     }
 
     private String getNodeLabel(Node n) {

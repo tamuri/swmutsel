@@ -6,9 +6,12 @@ import pal.misc.Identifier;
 import pal.tree.Node;
 import pal.tree.Tree;
 import swmutsel.Constants;
+import swmutsel.Run;
+import swmutsel.model.SubstitutionModel;
 import swmutsel.model.SwMut;
 import swmutsel.model.SwMutSel;
 import swmutsel.model.parameters.Fitness;
+import swmutsel.model.parameters.FitnessFDS;
 import swmutsel.utils.CoreUtils;
 import swmutsel.utils.GeneticCode;
 import swmutsel.utils.PhyloUtils;
@@ -29,8 +32,12 @@ public class Simulator {
     private List<String> heteroClades;
     private List<Integer> aminoAcids = Lists.newArrayList();
     private Map<String, SwMutSel> cladeModels = Maps.newHashMap();
-    private double[][] Pt = new double[GeneticCode.CODON_STATES][GeneticCode.CODON_STATES];
+    // private double[][] Pt = new double[GeneticCode.CODON_STATES][GeneticCode.CODON_STATES];
     private double shiftFraction;
+
+    private double fdsFitness = 0;
+    private boolean quiet;
+    private boolean cachePt;
 
     public void initialise(int sites) {
         this.sites = sites;
@@ -48,6 +55,10 @@ public class Simulator {
         }
     }
 
+    public void setFdsFitness(double fdsFitness) {
+        this.fdsFitness = fdsFitness;
+    }
+
     public void setTree(Tree tree) {
         parsedTree = tree;
     }
@@ -58,6 +69,7 @@ public class Simulator {
     }
 
     public void simulate() {
+        clearPtCache();
         Node root = parsedTree.getRoot();
 
         // Root all uses the first model in the models list
@@ -66,6 +78,45 @@ public class Simulator {
         }
 
         downTree(root);
+    }
+
+    private SubstitutionModel PtCacheModel;
+    private Map<Double, double[][]> PtCache = Maps.newHashMap();
+
+    public void clearPtCache() {
+        PtCache.clear();
+        PtCacheModel = null;
+    }
+
+    private double[][] getPtViaCache(SubstitutionModel model, double branchLength) {
+        if (PtCacheModel == model && PtCache.containsKey(branchLength)) {
+            return PtCache.get(branchLength);
+        }
+
+        if (PtCacheModel == null) {
+            if (PtCache.isEmpty()) {
+                PtCacheModel = model;
+            } else {
+                throw new RuntimeException("error with pt cache! 1");
+            }
+        } else if (PtCacheModel != model) {
+            throw new RuntimeException("error with pt cache! 2");
+        }
+
+        if (!quiet)
+            System.out.println("************************************\n BUILDING PT\n ******************************************");
+
+        double[][] newPt = new double[GeneticCode.CODON_STATES][GeneticCode.CODON_STATES];
+
+        model.getPtCalculator().getTransitionProbabilities(newPt, branchLength);
+        PtCache.put(branchLength, newPt);
+        return newPt;
+    }
+
+    private final double[][] PtStore = new double[GeneticCode.CODON_STATES][GeneticCode.CODON_STATES];
+
+    private double[][] getPt() {
+        return PtStore;
     }
 
     private void downTree(Node parent) {
@@ -78,7 +129,13 @@ public class Simulator {
             if (this.heteroClades.size() == 1) {
                 model = "ALL";
 
-                this.cladeModels.get(model).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength());
+                double[][] Pt;
+                if (cachePt) {
+                    Pt = getPtViaCache(this.cladeModels.get(model), child.getBranchLength());
+                } else {
+                    Pt = getPt();
+                    this.cladeModels.get(model).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength());
+                }
 
                 for (int j = 0; j < this.sites; j++) {
                     int row = seqout.get(parent.getIdentifier())[j];
@@ -98,7 +155,13 @@ public class Simulator {
                         switchPoint[j] = seqout.get(parent.getIdentifier())[j];
                     }
                 } else {
-                    this.cladeModels.get(modelA).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength() * shiftFraction);
+                    double[][] Pt;
+                    if (cachePt) {
+                        Pt = getPtViaCache(this.cladeModels.get(modelA), child.getBranchLength());
+                    } else {
+                        Pt = getPt();
+                        this.cladeModels.get(modelA).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength() * shiftFraction);
+                    }
 
                     for (int j = 0; j < this.sites; j++) {
                         int row = seqout.get(parent.getIdentifier())[j];
@@ -112,7 +175,14 @@ public class Simulator {
                         seqout.get(child.getIdentifier())[j] = switchPoint[j];
                     }
                 } else {
-                    this.cladeModels.get(modelB).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength() * (1 - shiftFraction));
+
+                    double[][] Pt;
+                    if (cachePt) {
+                        Pt = getPtViaCache(this.cladeModels.get(modelB), child.getBranchLength());
+                    } else {
+                        Pt = getPt();
+                        this.cladeModels.get(modelB).getPtCalculator().getTransitionProbabilities(Pt, child.getBranchLength() * (1 - shiftFraction));
+                    }
 
                     for (int j = 0; j < this.sites; j++) {
                         int row = switchPoint[j];
@@ -157,7 +227,8 @@ public class Simulator {
     }
 
     public void setCladeModel(String model, List<Double> fitness) {
-        System.out.printf("%s has fitness %s for residues %s.\n", model, fitness, aminoAcids);
+        if (!quiet)
+            System.out.printf("%s has fitness %s for residues %s.\n", model, fitness, aminoAcids);
 
 
         double[] f = new double[GeneticCode.AMINO_ACID_STATES];
@@ -169,13 +240,16 @@ public class Simulator {
             f[residue] = fitness.get(i);
         }
 
-
-
-
-        SwMutSel codonModel = new SwMutSel(this.globals, new Fitness(f));
+        SwMutSel codonModel;
+        if (fdsFitness > 0) {
+            codonModel = new SwMutSel(this.globals, new Fitness(f), new FitnessFDS(fdsFitness, 1)); // swMutSel-FDS model (Zk > 0)
+        } else {
+            codonModel = new SwMutSel(this.globals, new Fitness(f));
+        }
         codonModel.build();
 
-        System.out.printf("Amino acid frequencies are:\n%s\n", CoreUtils.join("%.7f", " ", PhyloUtils.getAminoAcidFrequencies(codonModel.getCodonFrequencies())));
+        if (!quiet)
+            System.out.printf("Amino acid frequencies are:\n%s\n", CoreUtils.join("%.7f", " ", PhyloUtils.getAminoAcidFrequencies(codonModel.getCodonFrequencies())));
         this.cladeModels.put(model, codonModel);
     }
 
@@ -205,5 +279,14 @@ public class Simulator {
             throw new RuntimeException("-shiftfrac should be between 0 and 1");
         }
         this.shiftFraction = shiftFraction;
+    }
+
+    public void setQuiet(boolean quiet) {
+        this.quiet = quiet;
+    }
+
+
+    public void setCachePt(boolean cachePt) {
+        this.cachePt = cachePt;
     }
 }

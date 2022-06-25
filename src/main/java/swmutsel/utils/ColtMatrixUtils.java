@@ -4,6 +4,8 @@ import cern.colt.matrix.DoubleFactory1D;
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
+import cern.jet.math.*;
+import swmutsel.colt.Algebra;
 
 /**
  * @author Asif Tamuri (atamuri@nimr.mrc.ac.uk)
@@ -64,4 +66,20 @@ public class ColtMatrixUtils {
         }
 
     }
+
+    private static DoubleMatrix2D T = DoubleFactory2D.dense.make(64, 64);
+    private static DoubleMatrix2D B = DoubleFactory2D.dense.make(64, 64);
+
+    public static DoubleMatrix2D taylorExpTerm(DoubleMatrix2D Q, int k, DoubleMatrix2D out) {
+        T.assign(0);
+        B.assign(0);
+        //Algebra.DEFAULT.pow(Q, k, out, T, B); <--- WHY DOESN'T THIS WORK??
+        out.assign(Algebra.DEFAULT.pow(Q, k, out, T, B));
+        out.assign(cern.jet.math.Functions.div(Arithmetic.factorial(k)));
+        return out;
+    }
+
+
+
+
 }

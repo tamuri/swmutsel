@@ -1,5 +1,7 @@
 package swmutsel;
 
+import java.util.Objects;
+
 /**
  * Various constants used throughout the program but not expected to be changed by end-users.
  *
@@ -19,7 +21,7 @@ public class Constants {
     /**
      * When to assume convergence of MLE of fitness parameters (log-likelihood).
      */
-    public static double CONVERGENCE_TOL = 5.0e-6;
+    public static double VALUE_CONVERGENCE_TOL = 1.0e-6;
     public static final double SMALL_CHANGE = 1e-3;
     public static final double MINIMUM_TOL = 1.0e-7;
 
@@ -83,4 +85,9 @@ public class Constants {
     public static final String HELP_COMMAND_SWMUTSEL = "command_swmutsel.txt";
     public static final String HELP_FULL = "help.txt";
 
+    /**
+     * Debug settings for development
+     */
+    public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("DEBUG"));
+    public static final int DEBUG_LEVEL = Objects.isNull(System.getProperty("DEBUGLVL")) ? 0 : Integer.parseInt(System.getProperty("DEBUGLVL"));
 }

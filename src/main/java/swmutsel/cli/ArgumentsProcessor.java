@@ -46,7 +46,9 @@ public class ArgumentsProcessor {
 
         Arguments opt;
 
-        if (shared.fmutsel0) {
+        if (shared.fdr) {
+            opt = new FDSArguments();
+        } else if (shared.fmutsel0) {
             opt = new FMutSel0Arguments();
         } else if (shared.simulate) {
             // simulate swmutsel options

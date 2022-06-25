@@ -110,7 +110,7 @@ public class NativeLBFGSBMultivariateOptimizer extends MultivariateOptimizer {
                 }
             }
 
-            if (current - functionValue < Constants.CONVERGENCE_TOL) {
+            if (current - functionValue < Constants.VALUE_CONVERGENCE_TOL) {
                 return false;
             }
 

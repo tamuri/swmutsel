@@ -31,9 +31,16 @@ public class SimulateHandler implements Handler {
         s.setClades(args.cladeModel);
         s.setAminoAcids(args.residues);
         s.setShiftFraction(args.shiftFrac);
+        s.setQuiet(args.quiet);
+        s.setCachePt(args.cachept);
+
+        if (args.Zn == 0) {
+            args.Zn = Double.POSITIVE_INFINITY;
+        }
 
         // If we're simulating a single set of fitnesses, specified using the -fitness option
         if (args.fitness.size() > 0) {
+            s.setFdsFitness(args.Z);
             s.initialise(args.sites);
 
             for (int i = 0; i < args.cladeModel.size(); i++) {
@@ -69,10 +76,21 @@ public class SimulateHandler implements Handler {
             // Start reading the fitnesses from the fitness file(s)
             int site = 1;
             String line;
+            int sitesWithFDS = 0;
 
             try {
                 while ((line = cladeFitnessReaders.get(args.cladeModel.get(0)).readLine()) != null) {
-                    System.out.printf("Site %s:\n", site++);
+                    if (args.Z > 0 && site <= args.Zn) {
+                        s.setFdsFitness(args.Z);
+                        sitesWithFDS++;
+                    } else {
+                        s.setFdsFitness(0);
+                    }
+
+                    if (!args.quiet) {
+                        System.out.printf("Site %s:\n", site);
+                    }
+
                     // "line" now holds the fitnesses for the first clade - set the clade model for the simulator
                     s.setCladeModel(args.cladeModel.get(0), Lists.transform(Arrays.asList(line.split(" ")), Functions.stringToDouble()));
 
@@ -88,10 +106,14 @@ public class SimulateHandler implements Handler {
                     for (Map.Entry<String, int[]> e : s.getSimulatedData().entrySet()) {
                         simSites.put(e.getKey(), e.getValue()[0]); // remember, only one site
                     }
+
+                    site++;
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+
+            System.out.println("Sites with FDS: " + sitesWithFDS);
 
             // close all readers
             for (BufferedReader br : cladeFitnessReaders.values()) {
@@ -114,9 +136,15 @@ public class SimulateHandler implements Handler {
             out.write(sequences.keySet().size() + "   " + sequences.values().iterator().next().size() * 3);
             out.newLine();
 
-            for (Map.Entry<String, Collection<Integer>> e : sequences.entrySet()) {
-                Collection<String> codons = Collections2.transform(e.getValue(), Functions.codonIndexToTLA());
-                out.write(e.getKey() + "     ");
+            // sort labels
+            String[] labels = sequences.keySet().toArray(new String[0]);
+            Arrays.sort(labels);
+
+            // for (Map.Entry<String, Collection<Integer>> e : sequences.entrySet()) {
+            for (String label : labels) {
+                Collection<Integer> value = sequences.get(label);
+                Collection<String> codons = Collections2.transform(value, Functions.codonIndexToTLA());
+                out.write(label + "     ");
                 for (String c : codons) out.write(c);
                 out.newLine();
             }

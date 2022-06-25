@@ -63,11 +63,10 @@ public abstract class SubstitutionModel implements Serializable {
      *
      */
     protected static void setEigenFactors(final DoubleMatrix2D B, final double[] lambda, final int states, final double[] freq, final double[][] U, final double[][] Uinv) {
-        // TODO: No need to create R - could reuse B
         double[][] R = new double[states][states];
 
+        // Symmetric models only
         MathUtils.setEigenFactors(B, lambda, R, states);
-
         double[] U_row, Uinv_row;
 
         for (int row = 0; row < states; row++) {
@@ -79,6 +78,26 @@ public abstract class SubstitutionModel implements Serializable {
                 Uinv_row[column] = R[column][row] * Math.sqrt(freq[column]); // U⁻¹ = R⁻¹ * Π^(½)
             }
         }
+
+        /*
+        // For non-symmetric models but can't use spectral decomposition TODO: should be removed!
+        EigenvalueDecomposition eigen = new EigenvalueDecomposition(B);
+        DoubleMatrix2D RR = eigen.getV();
+        DoubleMatrix1D LL = DoubleFactory2D.dense.diagonal(eigen.getD());
+        double[] U_row, Uinv_row;
+        DoubleMatrix2D diag = DoubleFactory2D.dense.make(states, states);
+        for (int row = 0; row < states; row++) {
+            double piInvSqrt = 1 / Math.sqrt(freq[row]);
+            U_row = U[row];
+            Uinv_row = Uinv[row];
+            for (int column = 0; column < states; column++) {
+                U_row[column] = piInvSqrt * RR.getQuick(row, column); // U = Π^(-½) * R
+                Uinv_row[column] = RR.getQuick(column, row) * Math.sqrt(freq[column]); // U⁻¹ = R⁻¹ * Π^(½)
+            }
+            lambda[row] = LL.getQuick(row);
+            diag.setQuick(row, row, lambda[row]);
+        }
+        */
     }
 
     public abstract TransProbCalculator getPtCalculator();

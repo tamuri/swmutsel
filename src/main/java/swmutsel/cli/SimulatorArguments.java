@@ -49,6 +49,18 @@ public class SimulatorArguments extends SharedArguments {
     @Parameter(names = "-scaling", required = true)
     public double scaling;
 
+    @Parameter(names = "-Z", required = false)
+    public double Z = 0;
+
+    @Parameter(names = "-Zn", required = false)
+    public double Zn = 0;
+
+    @Parameter(names = {"-q", "-quiet"}, required = false)
+    public boolean quiet = false;
+
+    @Parameter(names = {"-cachept"}, required = false, hidden = true)
+    public boolean cachept = false;
+
     public Tree tree;
 
     @Override
