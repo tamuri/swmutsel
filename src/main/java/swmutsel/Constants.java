@@ -76,7 +76,7 @@ public class Constants {
     public static final String PIAA_FILENAME = "PiAA.txt";
     public static final String F_FILENAME = "F.txt";
 
-    public static final String RESOURCE_PATH = "/resources/";
+    public static final String RESOURCE_PATH = "/swmutsel/";
     public static final String HELP_DESCRIPTION = "description.txt";
     public static final String HELP_COMMAND_FMUTSEL0 = "command_fmutsel0.txt";
     public static final String HELP_COMMAND_SIMULATE = "command_simulate.txt";
