@@ -55,15 +55,38 @@
             <artifactId>jgrapht-core</artifactId>
             <version>0.9.1</version>
         </dependency>
+        <!-- Build local copy of PAL and install into local Maven repo:
+        git clone https://github.com/tamuri/pal.git
+        cd pal
+        git checkout tamuri
+        ant
+        mvn install:install-file \
+            -DgroupId=org.pal-project \
+            -Dpackaging=jar -DgeneratePom=true \
+            -DartifactId=pal \
+            -Dfile=dist/lib/pal-tamuri-2511251146.jar \
+            -Dversion=tamuri-2511251146
+        -->
         <dependency>
           <groupId>org.pal-project</groupId>
           <artifactId>pal</artifactId>
-          <version>tamuri-150715</version>
+          <version>tamuri-2511251146</version>
         </dependency>
+        <!-- Build local copy (requires Linux) and install into local Maven repo:
+        git clone https://github.com/mkobos/lbfgsb_wrapper.git
+        cd lbfgsb_wrapper
+        ant
+        mvn install:install-file \
+            -DgroupId=mkobos \
+            -DartifactId=lbfgsb_wrapper \
+            -Dpackaging=jar -DgeneratePom=true \
+            -Dfile=dist/lbfgsb_wrapper-1.1.5.jar \
+            -Dversion=1.1.5
+        -->
         <dependency>
             <groupId>mkobos</groupId>
             <artifactId>lbfgsb_wrapper</artifactId>
-            <version>1.1.3</version>
+            <version>1.1.5</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
