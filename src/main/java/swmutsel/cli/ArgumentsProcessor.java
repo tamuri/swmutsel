@@ -168,7 +168,7 @@ public class ArgumentsProcessor {
     }
 
     private static void showHelpAndExit() {
-        InputStream is = ArgumentsProcessor.class.getClass().getResourceAsStream(Constants.RESOURCE_PATH + Constants.HELP_DESCRIPTION);
+        InputStream is = ArgumentsProcessor.class.getResourceAsStream(Constants.RESOURCE_PATH + Constants.HELP_DESCRIPTION);
         String s = CoreUtils.convertStreamToString(is);
         System.out.println();
         System.out.println(s);
@@ -180,7 +180,7 @@ public class ArgumentsProcessor {
         System.out.println(s);
         System.out.println();
 
-        is = ArgumentsProcessor.class.getClass().getResourceAsStream(Constants.RESOURCE_PATH + Constants.HELP_FULL);
+        is = ArgumentsProcessor.class.getResourceAsStream(Constants.RESOURCE_PATH + Constants.HELP_FULL);
         s = CoreUtils.convertStreamToString(is);
         System.out.println(s);
         System.out.println();
