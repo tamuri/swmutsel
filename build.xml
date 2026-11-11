@@ -6,8 +6,11 @@
     <property name="dist.dir" location="dist" />
     <property name="docs.dir" location="docs/api" />
     <property name="libs.dir" location="lib" />
+    <property name="test.src.dir" location="src/test/java" />
+    <property name="test.resources.dir" location="src/test/resources" />
+    <property name="test.build.dir" location="build-test" />
 
-    <path id="build.classpath">
+    <path id="build.classpath">ss
         <fileset dir="${libs.dir}">
             <include name="**/*.jar" />
         </fileset>
@@ -15,13 +18,14 @@
 
     <target name="clean">
         <delete dir="${build.dir}" />
+        <delete dir="${test.build.dir}" />
         <delete dir="${dist.dir}" />
     </target>
 
     <target name="makedir">
         <mkdir dir="${build.dir}" />
         <mkdir dir="${dist.dir}" />
-        <copy todir="${build.dir}">
+        <copy todir="${build.dir}"
            <fileset dir="src" includes="resources/help.txt" />
            <fileset dir="src" includes="resources/command_fmutsel0.txt" />
            <fileset dir="src" includes="resources/command_simulate.txt" />
@@ -33,6 +37,25 @@
     <target name="compile">
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}" classpathref="build.classpath">
         </javac>
+    </target>
+
+    <target name="test" depends="makedir, compile">
+        <mkdir dir="${test.build.dir}" />
+        <javac includeantruntime="false" srcdir="${test.src.dir}" destdir="${test.build.dir}">
+            <classpath>
+                <pathelement location="${build.dir}" />
+                <path refid="build.classpath" />
+            </classpath>
+        </javac>
+        <java classname="org.junit.runner.JUnitCore" fork="true" failonerror="true">
+            <arg value="swmutsel.FixAllTest" />
+            <sysproperty key="test.resources" value="${test.resources.dir}" />
+            <classpath>
+                <pathelement location="${test.build.dir}" />
+                <pathelement location="${build.dir}" />
+                <path refid="build.classpath" />
+            </classpath>
+        </java>
     </target>
 
     <target name="docs" depends="compile">
@@ -51,7 +74,7 @@
             <format property="timenow" pattern="yyMMddHHmm" />
         </tstamp>
         <jar manifest="src/resources/META-INF/MANIFEST.MF" destfile="${dist.dir}\${ant.project.name}.jar" basedir="${build.dir}">
-            <zipgroupfileset dir="lib" includes="*.jar" />
+            <zipgroupfileset dir="lib" includes="*.jar" excludes="junit-*.jar,hamcrest-*.jar" />
         </jar>
     </target>
 
