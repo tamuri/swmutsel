@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project name="swmutsel" default="dist" basedir=".">
-    <property name="src.dir" location="src/java" />
-    <property name="src.resources" location="src/resources" />
+    <property name="src.dir" location="src/main/java" />
+    <property name="src.resources" location="src/main/resources" />
     <property name="build.dir" location="build" />
     <property name="dist.dir" location="dist" />
     <property name="docs.dir" location="docs/api" />
@@ -26,11 +26,7 @@
         <mkdir dir="${build.dir}" />
         <mkdir dir="${dist.dir}" />
         <copy todir="${build.dir}">
-           <fileset dir="src" includes="resources/help.txt" />
-           <fileset dir="src" includes="resources/command_fmutsel0.txt" />
-           <fileset dir="src" includes="resources/command_simulate.txt" />
-           <fileset dir="src" includes="resources/command_swmutsel.txt" />
-           <fileset dir="src" includes="resources/description.txt" />
+           <fileset dir="${src.resources}" />
         </copy>
     </target>
 
@@ -53,9 +49,11 @@
             <arg value="swmutsel.HelpTest" />
             <arg value="swmutsel.FMutSel0OptimisationTest" />
             <arg value="swmutsel.AminoAcidPseudocountTest" />
+            <arg value="swmutsel.model.TransProbCalcFactoryTest" />
             <sysproperty key="test.resources" value="${test.resources.dir}" />
             <classpath>
                 <pathelement location="${test.build.dir}" />
+                <pathelement location="${test.resources.dir}" />
                 <pathelement location="${build.dir}" />
                 <path refid="build.classpath" />
             </classpath>
@@ -77,7 +75,10 @@
         <tstamp>
             <format property="timenow" pattern="yyMMddHHmm" />
         </tstamp>
-        <jar manifest="src/resources/META-INF/MANIFEST.MF" destfile="${dist.dir}\${ant.project.name}.jar" basedir="${build.dir}">
+        <jar destfile="${dist.dir}/${ant.project.name}.jar" basedir="${build.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="swmutsel.Run" />
+            </manifest>
             <zipgroupfileset dir="lib" includes="*.jar" excludes="junit-*.jar,hamcrest-*.jar" />
         </jar>
     </target>

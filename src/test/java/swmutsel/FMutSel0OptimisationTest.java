@@ -33,7 +33,7 @@ public class FMutSel0OptimisationTest {
     @After
     public void restoreConvergenceTolerance() {
         // FMutSelHandler tightens this static in each round, which would leak into other tests in the same JVM
-        Constants.CONVERGENCE_TOL = 5.0e-6;
+        Constants.VALUE_CONVERGENCE_TOL = 5.0e-6;
     }
 
     @Test
