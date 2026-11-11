@@ -10,7 +10,7 @@
     <property name="test.resources.dir" location="src/test/resources" />
     <property name="test.build.dir" location="build-test" />
 
-    <path id="build.classpath">ss
+    <path id="build.classpath">
         <fileset dir="${libs.dir}">
             <include name="**/*.jar" />
         </fileset>
@@ -25,7 +25,7 @@
     <target name="makedir">
         <mkdir dir="${build.dir}" />
         <mkdir dir="${dist.dir}" />
-        <copy todir="${build.dir}"
+        <copy todir="${build.dir}">
            <fileset dir="src" includes="resources/help.txt" />
            <fileset dir="src" includes="resources/command_fmutsel0.txt" />
            <fileset dir="src" includes="resources/command_simulate.txt" />
@@ -49,6 +49,7 @@
         </javac>
         <java classname="org.junit.runner.JUnitCore" fork="true" failonerror="true">
             <arg value="swmutsel.FixAllTest" />
+            <arg value="swmutsel.FitnessOptimisationTest" />
             <sysproperty key="test.resources" value="${test.resources.dir}" />
             <classpath>
                 <pathelement location="${test.build.dir}" />

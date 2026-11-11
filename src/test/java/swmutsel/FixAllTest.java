@@ -20,8 +20,6 @@ import static org.junit.Assert.assertTrue;
  *
  * sim300.phy simulated with swMutSel: standard genetic code, kappa = 2, pi = 0.25 each, scaling = 1 
  * and single fitness vector in sim300.fitness.csv (repeated for every site). 
- *
- * Run with "ant test".
  */
 public class FixAllTest {
     private static final String TREE = "((A:0.1,B:0.1):0.05,(C:0.1,D:0.1):0.05,E:0.2);";
