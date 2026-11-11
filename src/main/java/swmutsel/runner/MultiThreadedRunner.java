@@ -343,9 +343,6 @@ public class MultiThreadedRunner extends Runner {
                     };
                     MultivariateOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
 
-                    //MultivariateOptimizer optimiser = new LBFGSMultivariateOptimizer(convergenceChecker);
-                    //MultivariateOptimizer optimiser = new NativeLBFGSBMultivariateOptimizer(convergenceChecker);
-
                     double[] initialGuess = function.getCurrentParameters();
 
                     PointValuePair optima;

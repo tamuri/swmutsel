@@ -387,7 +387,6 @@ public abstract class Runner {
 
         //int n = initialGuess.length;
         //MultivariateOptimizer optimiser = new BOBYQAOptimizer(2 * n + 1);
-        //MultivariateOptimizer optimiser = new NativeLBFGSBMultivariateOptimizer(convergenceChecker);
 
         MultivariateOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
 

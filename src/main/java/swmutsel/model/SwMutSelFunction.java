@@ -47,7 +47,6 @@ public class SwMutSelFunction implements MultivariateFunction {
 
     @Override
     public double value(double[] point) {
-        // todo: looks like we can ignore bounds when using lbfgs
         for (double d : point) {
             if (d < -(Constants.FITNESS_BOUND + 1) || d > (Constants.FITNESS_BOUND + 1)) {
                 return Constants.VERY_BAD_LIKELIHOOD;
