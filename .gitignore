@@ -1,7 +1,6 @@
 build/
 dist/
 build-test/
-target/
 .idea/
 swmutsel.iml
 classpath
