@@ -22,6 +22,12 @@ public class Constants {
      * When to assume convergence of MLE of fitness parameters (log-likelihood).
      */
     public static double VALUE_CONVERGENCE_TOL = 5.0e-6; // fds branch used 1.0e-6; master value kept so results are unchanged
+
+    /**
+     * Convergence tolerance (log-likelihood) for the -fds site optimisation. This is the value VALUE_CONVERGENCE_TOL
+     * had on the fds branch, where the -fds model was developed; the rest of the program keeps master's value above.
+     */
+    public static final double FDS_CONVERGENCE_TOL = 1.0e-6;
     public static final double SMALL_CHANGE = 1e-3;
     public static final double MINIMUM_TOL = 1.0e-7;
 

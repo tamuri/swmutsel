@@ -107,7 +107,7 @@ public class FDSHandler implements Handler {
             if (args.noOpt) {
                 likelihood = function.value(initialGuess);
             } else {
-                MultivariateOptimizer optimiser = new SimplexOptimizer(new SimpleValueChecker(-1, Constants.VALUE_CONVERGENCE_TOL));
+                MultivariateOptimizer optimiser = new SimplexOptimizer(new SimpleValueChecker(-1, Constants.FDS_CONVERGENCE_TOL));
                 PointValuePair optima;
 
                 optima = optimiser.optimize(
