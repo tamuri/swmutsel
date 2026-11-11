@@ -96,8 +96,8 @@ public class FMutSel0Arguments extends SharedArguments {
 
         // if user didn't provide fitness vector for the [single class] FMutSel0 model
         if (this.fitnessList == null && this.classes == 1) {
-            // populate with fitness derived from observed amino acids
-            this.fitnesses.put(1, new Fitness(PhyloUtils.aminoAcidToFitness(PhyloUtils.getObservedAminoAcidFrequencies(this.sites), CoreUtils.seq(0, 19))));
+            // populate with fitness derived from observed amino acids (pseudocount: unobserved amino acids have log(0))
+            this.fitnesses.put(1, new Fitness(PhyloUtils.aminoAcidToFitness(PhyloUtils.getObservedAminoAcidFrequencies(this.sites, Constants.AMINO_ACID_PSEUDOCOUNT), CoreUtils.seq(0, 19))));
         } else {
             this.fitnesses = ArgumentsProcessor.loadFitnessStore(this.fitnessList, this.classes, false, new ArgumentsProcessor.FitnessOrderingCallback() {
                 @Override

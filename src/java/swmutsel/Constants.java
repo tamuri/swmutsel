@@ -35,6 +35,11 @@ public class Constants {
     public static final double FITNESS_BOUND = 20;
 
     /**
+     * Added to the count of each amino acid when deriving starting fitnesses from the observed amino acids
+     */
+    public static final double AMINO_ACID_PSEUDOCOUNT = 0.1;
+
+    /**
      * BOBYQA settings, used to optimise the parameters of the FMutSel0 models.
      */
     public static final double MODEL_PARAMETER_BOUND = FITNESS_BOUND + 1;

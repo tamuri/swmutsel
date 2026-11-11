@@ -322,6 +322,16 @@ public class PhyloUtils {
     }
 
     public static double[] getObservedAminoAcidFrequencies(Table<String, Integer, Byte> sites) {
+        return getObservedAminoAcidFrequencies(sites, 0);
+    }
+
+    /**
+     * The frequency of each amino acid, counted over all sense codons in the alignment.
+     *
+     * @param pseudocount added to the count of every amino acid before normalising. With the default of 0, an amino
+     *                    acid that is never observed has frequency 0 (and so a log-frequency of -Infinity).
+     */
+    public static double[] getObservedAminoAcidFrequencies(Table<String, Integer, Byte> sites, double pseudocount) {
         double[] out = new double[GeneticCode.AMINO_ACID_STATES];
 
         for (Map<Integer, Byte> row : sites.rowMap().values()) {
@@ -332,6 +342,11 @@ public class PhyloUtils {
                 }
             }
         }
+
+        for (int i = 0; i < out.length; i++) {
+            out[i] += pseudocount;
+        }
+
         double total = CoreUtils.sum(out);
         for (int i = 0; i < out.length; i++) {
             out[i] /= total;
