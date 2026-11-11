@@ -33,7 +33,7 @@ public class SharedArguments extends Arguments {
     @Parameter(names = "-fmutsel0", required = false)
     public boolean fmutsel0 = false;
 
-    @Parameter(names = "-fds", required = false)
+    @Parameter(names = {"-fds", "-pps"}, required = false)
     public boolean fdr = false;
 
     @Override
@@ -51,5 +51,4 @@ public class SharedArguments extends Arguments {
         return null; // show everything
     }
 }
-
 

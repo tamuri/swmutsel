@@ -179,8 +179,8 @@ USAGE
 
           java -jar swmutsel.jar @test_CHKPNT_9.txt -n test_restart
 
-       To use the new persistent positive selection model (Tamuri and dos Reis,
-       2022), use the -fds flag.
+       To use the persistent positive selection model (Tamuri and dos Reis,
+       2022), use the -fds or -pps flag.
 
 CITATION
 
