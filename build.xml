@@ -51,6 +51,7 @@
             <arg value="swmutsel.FixAllTest" />
             <arg value="swmutsel.FitnessOptimisationTest" />
             <arg value="swmutsel.HelpTest" />
+            <arg value="swmutsel.FMutSel0OptimisationTest" />
             <sysproperty key="test.resources" value="${test.resources.dir}" />
             <classpath>
                 <pathelement location="${test.build.dir}" />

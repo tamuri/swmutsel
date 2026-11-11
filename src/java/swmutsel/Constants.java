@@ -35,6 +35,13 @@ public class Constants {
     public static final double FITNESS_BOUND = 20;
 
     /**
+     * BOBYQA settings, used to optimise the parameters of the FMutSel0 models.
+     */
+    public static final double MODEL_PARAMETER_BOUND = FITNESS_BOUND + 1;
+    public static final double BOBYQA_INITIAL_RADIUS = 1.0;
+    public static final double BOBYQA_STOPPING_RADIUS = 1.0e-5;
+
+    /**
      * Terminate the optimisation routine after this number of evaluations.
      */
     public static final int MAX_EVALUATIONS = 12000;

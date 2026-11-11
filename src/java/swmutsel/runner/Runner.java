@@ -10,6 +10,7 @@ import org.apache.commons.math3.optim.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.MultivariateOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer;
 import org.apache.commons.math3.optim.univariate.*;
@@ -21,7 +22,6 @@ import swmutsel.model.*;
 import swmutsel.model.parameters.Fitness;
 import swmutsel.model.parameters.FitnessStore;
 import swmutsel.model.parameters.Mapper;
-import swmutsel.optim.NativeLBFGSBMultivariateOptimizer;
 import swmutsel.trees.RerootedTreeIterator;
 import swmutsel.utils.CoreUtils;
 import swmutsel.utils.Pair;
@@ -326,19 +326,26 @@ public abstract class Runner {
 
         SubstitutionModelFunction function = new SubstitutionModelFunction(model, this);
 
-        ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(-1, Constants.CONVERGENCE_TOL);
+        // Note that BOBYQA uses its own trust-region stopping rule, not a ConvergenceChecker.
+        final int n = startingValues.length;
+        final double[] lower = new double[n];
+        final double[] upper = new double[n];
+        final double[] start = new double[n];
+        for (int i = 0; i < n; i++) {
+            lower[i] = -Constants.MODEL_PARAMETER_BOUND;
+            upper[i] = Constants.MODEL_PARAMETER_BOUND;
+            // the starting point must be strictly within the bounds
+            start[i] = Math.max(lower[i], Math.min(upper[i], startingValues[i]));
+        }
 
-        //int n = initialGuess.length;
-        //MultivariateOptimizer optimiser = new BOBYQAOptimizer(2 * n + 1);
-        MultivariateOptimizer optimiser = new NativeLBFGSBMultivariateOptimizer(convergenceChecker);
-
-        //MultivariateOptimizer optimiser = new SimplexOptimizer(convergenceChecker);
+        MultivariateOptimizer optimiser = new BOBYQAOptimizer(2 * n + 1,
+                Constants.BOBYQA_INITIAL_RADIUS, Constants.BOBYQA_STOPPING_RADIUS);
 
         try {
             optima = optimiser.optimize(new ObjectiveFunction(function),
                     GoalType.MAXIMIZE,
-                    new InitialGuess(startingValues),//,
-                    new NelderMeadSimplex(startingValues.length),
+                    new InitialGuess(start),
+                    new SimpleBounds(lower, upper),
                     new MaxEval(Constants.MAX_EVALUATIONS)
             );
         } catch (Exception e) {
