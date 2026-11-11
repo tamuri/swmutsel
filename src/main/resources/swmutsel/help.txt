@@ -138,6 +138,9 @@ USAGE
 
           java -jar swmutsel.jar @test_CHKPNT_9.txt -n test_restart
 
+       To use the persistent positive selection model (Tamuri and dos Reis, 2022),
+       use either the -fds or -pps flag.
+
        Q: The program terminated and I have test_MLE.txt but I forgot "-hessian"
 
        A: You can run the program with "-fix all" and the maximum likelihood
@@ -157,5 +160,8 @@ CITATION
 
        Tamuri AU, Goldman N and dos Reis M. (2014) A penalized likelihood method
        for estimating the distribution of selection coefficients from
-       phylogenetic data. Genetics.
+       phylogenetic data. Genetics, 197: 257-271.
 
+       Tamuri AU and dos Reis M. (2022) A mutation-selection model of protein
+       evolution under persistent positive selection. Molecular Biology and
+       Evolution, 39: msab309.

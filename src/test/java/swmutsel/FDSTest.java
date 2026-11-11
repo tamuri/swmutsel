@@ -1,8 +1,10 @@
 package swmutsel;
 
+import com.beust.jcommander.JCommander;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import swmutsel.cli.SharedArguments;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -44,6 +46,18 @@ public class FDSTest {
 
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
+
+    @Test
+    public void ppsFlagIsAliasForFds() {
+        SharedArguments fdsArgs = new SharedArguments();
+        new JCommander(fdsArgs).parse("-fds", "-t", "tree", "-gc", "standard", "-n", "test");
+
+        SharedArguments ppsArgs = new SharedArguments();
+        new JCommander(ppsArgs).parse("-pps", "-t", "tree", "-gc", "standard", "-n", "test");
+
+        assertTrue(fdsArgs.fdr);
+        assertTrue(ppsArgs.fdr);
+    }
 
     @Test
     public void fdsSiteOptimisation() throws Exception {
