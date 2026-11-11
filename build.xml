@@ -50,6 +50,7 @@
         <java classname="org.junit.runner.JUnitCore" fork="true" failonerror="true">
             <arg value="swmutsel.FixAllTest" />
             <arg value="swmutsel.FitnessOptimisationTest" />
+            <arg value="swmutsel.HelpTest" />
             <sysproperty key="test.resources" value="${test.resources.dir}" />
             <classpath>
                 <pathelement location="${test.build.dir}" />
