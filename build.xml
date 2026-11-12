@@ -30,14 +30,15 @@
         </copy>
     </target>
 
-    <target name="compile">
-        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}" classpathref="build.classpath">
+    <!-- Built with JDK 25; release="17" keeps the jar runnable on Java 17 and later. -->
+    <target name="compile" depends="makedir">
+        <javac includeantruntime="false" release="17" srcdir="${src.dir}" destdir="${build.dir}" classpathref="build.classpath">
         </javac>
     </target>
 
     <target name="test" depends="makedir, compile">
         <mkdir dir="${test.build.dir}" />
-        <javac includeantruntime="false" srcdir="${test.src.dir}" destdir="${test.build.dir}">
+        <javac includeantruntime="false" release="17" srcdir="${test.src.dir}" destdir="${test.build.dir}">
             <classpath>
                 <pathelement location="${build.dir}" />
                 <path refid="build.classpath" />
