@@ -51,6 +51,7 @@
             <arg value="swmutsel.AminoAcidPseudocountTest" />
             <arg value="swmutsel.model.TransProbCalcFactoryTest" />
             <arg value="swmutsel.model.PadeTaylorTest" />
+            <arg value="swmutsel.model.PadeApproximantCalculatorTest" />
             <arg value="swmutsel.FDSTest" />
             <sysproperty key="test.resources" value="${test.resources.dir}" />
             <classpath>

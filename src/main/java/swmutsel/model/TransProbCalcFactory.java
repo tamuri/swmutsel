@@ -310,18 +310,25 @@ class TransProbCalcFactory {
         }
     }
 
+    /**
+     * Each instance holds its own powers of Q and its own work matrices, so instances are independent of each
+     * other. The work matrices are reused between calls, so the public methods are synchronized: an instance can be
+     * shared between threads, but calls on the same instance run one at a time. See PadeApproximantCalculatorTest.
+     */
     private static final class PadeApproximantCalculator implements TransProbCalculator {
 
-        // WARNING: This class is not thread-safe!!
-        private static final DoubleMatrix2D Q1 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D Q2 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D Q3 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D Q4 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D Q5 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D PT = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D TMP =  DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final DoubleMatrix2D D = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
-        private static final LUDecompositionQuick LU = new LUDecompositionQuick(0);
+        // Powers of Q (Q1 = Q), fixed after construction
+        private final DoubleMatrix2D Q1 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final DoubleMatrix2D Q2 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final DoubleMatrix2D Q3 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final DoubleMatrix2D Q4 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final DoubleMatrix2D Q5 = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+
+        // Work matrices, overwritten on every call (guarded by the instance lock)
+        private final DoubleMatrix2D PT = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final DoubleMatrix2D TMP =  DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final DoubleMatrix2D D = DoubleFactory2D.dense.make(GeneticCode.CODON_STATES, GeneticCode.CODON_STATES);
+        private final LUDecompositionQuick LU = new LUDecompositionQuick(0);
 
         private final double scaling;
         private final double Qnorm;
@@ -349,7 +356,7 @@ class TransProbCalcFactory {
         }
 
         @Override
-        public void getTransitionProbabilities(final double[][] Pt, final double branchLength) {
+        public synchronized void getTransitionProbabilities(final double[][] Pt, final double branchLength) {
             getTransitionProbabilities(branchLength);
 
             for (int i1 = 0; i1 < GeneticCode.CODON_STATES; i1++) {
@@ -410,7 +417,7 @@ class TransProbCalcFactory {
         }
 
         @Override
-        public void calculatePartialLikelihood(final double[] Ldown, final double[] Lup, final double t) {
+        public synchronized void calculatePartialLikelihood(final double[] Ldown, final double[] Lup, final double t) {
             getTransitionProbabilities(t);
 
             double b1, b2, b3, b4;

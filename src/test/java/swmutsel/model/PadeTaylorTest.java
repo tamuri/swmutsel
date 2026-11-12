@@ -19,9 +19,6 @@ import static org.junit.Assert.assertTrue;
  * 3. Padé's P(t) are checked to be probabilities, including beyond Taylor's range.
  *
  * Comparisons use the sense-codon block only: the calculators fill the stop-codon rows differently.
- *
- * NOTE: PadeApproximantCalculator keeps its matrices in static fields, so creating a second Padé calculator
- * overwrites the first. Each Padé calculator here is used before the next one is created.
  */
 public class PadeTaylorTest {
     private static final double SCALING = 1.5;
