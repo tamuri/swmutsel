@@ -43,7 +43,7 @@
                 <path refid="build.classpath" />
             </classpath>
         </javac>
-        <java classname="org.junit.runner.JUnitCore" fork="true" failonerror="true">
+        <java classname="swmutsel.VerboseTestRunner" fork="true" failonerror="true">
             <arg value="swmutsel.FixAllTest" />
             <arg value="swmutsel.FitnessOptimisationTest" />
             <arg value="swmutsel.HelpTest" />
