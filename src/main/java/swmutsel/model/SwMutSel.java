@@ -338,6 +338,14 @@ final public class SwMutSel extends SubstitutionModel {
         return hasFitnessFDS;
     }
 
+    /**
+     * A copy of the current sense-codon rate matrix (row-major, numSenseCodons x numSenseCodons), without the
+     * branch scaling factor. Package-private, for tests that build transition probability calculators directly.
+     */
+    double[] getQ() {
+        return Q.clone();
+    }
+
     private boolean doPenalty = false;
 
     public void setDoPenalty(boolean doPenalty) {

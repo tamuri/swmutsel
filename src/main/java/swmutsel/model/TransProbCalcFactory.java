@@ -230,6 +230,13 @@ class TransProbCalcFactory {
         }
     }
 
+    /**
+     * Not used by the program. Kept as an independent check on {@link PadeApproximantCalculator}, which is used
+     * for the non-reversible -fds model: see PadeTaylorTest.
+     *
+     * Only accurate while ||Q * scaling * t||_1 is below about 150. It uses three Taylor terms and a fixed 2^6
+     * squarings, so beyond that it diverges (e.g. ~1e19 at ||Qct||_1 of about 300).
+     */
     private static final class TaylorExpansionCalculator implements TransProbCalculator {
         // Scaling & squaring parameters (using Taylor expansion)
         private final int j = 6;
